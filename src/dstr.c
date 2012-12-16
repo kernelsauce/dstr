@@ -117,8 +117,11 @@ dstr *dstr_with_prealloc(unsigned int sz)
 
 int dstr_compact(dstr *str)
 {
-    if (str->allocd_mem < str->end){
+    int alloc;
+    if (str->allocd_mem > str->end){
+        alloc = str->end + 1;
         str->buf = realloc(str->buf, str->end + 1);
+        str->allocd_mem = alloc;
         if (str->buf)
             return 1;
     }
