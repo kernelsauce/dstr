@@ -8,7 +8,7 @@ LDFLAGS=
 OBJECTS=dstr_test.o ../src/dstr.o
 TARGET=dstr_test
 INCLUDE=-I../src
-LIB=
+LIB=-L/usr/lib -lcunit
 
 all: $(TARGET)
 
