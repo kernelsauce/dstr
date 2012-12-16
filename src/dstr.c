@@ -100,15 +100,15 @@ dstr *dstr_with_initial(const char *initial)
 dstr *dstr_with_prealloc(unsigned int sz)
 {
     dstr *str = malloc(sizeof(dstr));
-    int pre_alloc_mem = sz + 1;
+    int pre_alloc_mem = sizeof(char) * sz;
 
     if (!str)
         return 0;
     str->end = 0;
-    str->buf = 0;
-    str->allocd_mem = 0;
     str->growth_rate = 2;
-    if (!alloc_more(str, pre_alloc_mem))
+    str->allocd_mem = pre_alloc_mem;
+    str->buf = malloc(pre_alloc_mem);
+    if (!str->buf)
         return 0;
     str->buf[0] = '\0';
     str->ref = 1;
@@ -264,21 +264,35 @@ void dstr_list_remove(dstr_list *list, dstr_link_t *link)
     free(link);
 }
 
-void dstr_list_traverse(dstr_list * list, void (*callback)(dstr *))
+int dstr_list_size(const dstr_list *list)
+{
+    dstr_link_t *link;
+    int sz = 0;
+    for (link = list->first; link; link = link->next){
+        sz++;
+    }
+    return sz;
+}
+
+void dstr_list_traverse(dstr_list * list,
+                        void (*callback)(dstr *, void *),
+                        void *user_data)
 {
     dstr_link_t *link;
 
     for (link = list->first; link; link = link->next){
-        callback((void *) link->str);
+        callback((void *) link->str, user_data);
     }
 }
 
-void dstr_list_traverse_reverse (dstr_list *list, void (*callback)(dstr *))
+void dstr_list_traverse_reverse (dstr_list *list,
+                                 void (*callback)(dstr *, void *),
+                                 void *userdata)
 {
     dstr_link_t * link;
 
     for (link = list->last; link; link = link->prev) {
-        callback ((void *) link->str);
+        callback ((void *) link->str, userdata);
     }
 }
 
@@ -307,6 +321,11 @@ void dstr_list_decref (dstr_list *list)
         }
         free(list);
     }
+}
+
+void dstr_list_incref (dstr_list *list)
+{
+    list->ref++;
 }
 
 dstr *dstr_list_to_dstr(const char *sep, dstr_list *list)

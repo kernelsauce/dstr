@@ -190,16 +190,27 @@ int dstr_list_add_decref(dstr_list *dest, dstr *str);
 void dstr_list_remove(dstr_list *list, dstr_link_t *link);
 
 /**
+ * Get the amount of elements in the list.
+ * @param list The list to count.
+ * @return Amount of elements.
+ */
+int dstr_list_size(const dstr_list *list);
+
+/**
  * Traverse a list with a callback.
  * @param list The list to traverse
  */
-void dstr_list_traverse(dstr_list * list, void (*callback)(dstr *));
+void dstr_list_traverse(dstr_list * list,
+                        void (*callback)(dstr *, void *),
+                        void *user_data);
 
 /**
  * Traverse a list in reverse with a callback.
  * @param list The list to traverse
  */
-void dstr_list_traverse_reverse (dstr_list *list, void (*callback)(dstr *));
+void dstr_list_traverse_reverse (dstr_list *list,
+                                 void (*callback)(dstr *, void *),
+                                 void *userdata);
 
 /**
  * Traverse a list with a callback that return 0 or 1 depending on it wants
@@ -213,6 +224,12 @@ void dstr_list_traverse_delete (dstr_list * list, int (*callback)(dstr *));
  * @param list The list to modify.
  */
 void dstr_list_decref (dstr_list *list);
+
+/**
+ * Add reference to string list.
+ * @param list The list to modify.
+ */
+void dstr_list_incref (dstr_list *list);
 
 /**
  * Concat a string list a dynamic string.
