@@ -20,6 +20,8 @@
     OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
 
+#include <malloc.h>
+
 #ifndef _DSTR_H
 #define _DSTR_H 1
 
@@ -71,27 +73,20 @@ dstr *dstr_with_prealloc(unsigned int sz);
  * @param str Source dynamic string to return C string from.
  * @return Zero terminated C string from dynamic string.
  */
-const char *dstr_to_cstr_const(const dstr* str){ return str->buf; }
+const char *dstr_to_cstr_const(const dstr* str);
 
 /**
  * Decreases reference to the dynamic string.
  * If no more references is found, the string is free'd.
  * @param str The dynamic string to decrease reference for.
  */
-void dstr_decref(dstr *str)
-{
-    str->ref--;
-    if (!str->ref){
-        free(str->buf);
-        free(str);
-    }
-}
+void dstr_decref(dstr *str);
 
 /**
  * Increases reference to the dynamic string.
  * @param str The dynamic string to increase reference for.
  */
-void dstr_incref(dstr *str){ str->ref++; }
+void dstr_incref(dstr *str);
 
 /**
  * Appends a dynamic string to a dynamic string.
@@ -151,6 +146,13 @@ int dstr_compact(dstr *str);
  * @param rate The rate that required memory is multiplied by when allocating (to avoid thrasing).
  */
 void dstr_growth_rate(dstr *dest, int rate);
+
+/**
+ * Print the string to stdout.
+ * @param src The string to print.
+ * @return Characters printed.
+ */
+int dstr_print(const dstr *src);
 
 /********************* DYNAMIC STRING LIST PUBLIC API *************************/
 

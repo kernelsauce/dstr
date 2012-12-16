@@ -26,6 +26,25 @@ static int can_hold(const dstr *str, int chars)
         return (chars < str->allocd_mem);
 }
 
+void dstr_decref(dstr *str)
+{
+    str->ref--;
+    if (!str->ref){
+        free(str->buf);
+        free(str);
+    }
+}
+
+void dstr_incref(dstr *str)
+{
+    str->ref++;
+}
+
+const char *dstr_to_cstr_const(const dstr* str)
+{
+    return str->buf;
+}
+
 dstr *dstr_new()
 {
     dstr *str = malloc(sizeof(dstr));
