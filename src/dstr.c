@@ -176,11 +176,10 @@ dstr *dstr_copy(const dstr *copy)
 
 void dstr_clear(dstr *str)
 {
-    int i = str->allocd_mem;
-    for (; i >= 0; i--){
-        str->buf[i] = 0;
+    while (str->end){
+        str->end--;
+        str->buf[str->end] = 0;
     }
-    str->end = 0;
 }
 
 int dstr_print(const dstr *src)

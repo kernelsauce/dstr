@@ -53,9 +53,11 @@ void test_dstr_to_cstr()
 void test_decref()
 {
     dstr *str = dstr_new();
+    dstr_incref(str);
+    CU_ASSERT_EQUAL(str->ref, 2);
+    dstr_decref(str);
     CU_ASSERT_EQUAL(str->ref, 1);
     dstr_decref(str);
-    CU_ASSERT_EQUAL(str->ref, 0);
 }
 
 void test_incref()
