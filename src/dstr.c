@@ -26,7 +26,7 @@
 
 #include "dstr.h"
 
-/******************************** DYNAMIC STRING ********************************/
+/****************************** DYNAMIC STRING ********************************/
 
 static int alloc_more(dstr* str, int sz)
 {
@@ -76,6 +76,7 @@ dstr *dstr_new()
     str->end = 0;
     str->buf = 0;
     str->growth_rate = 2;
+    str->allocd_mem = 0;
     str->ref = 1;
     return str;
 }
@@ -88,7 +89,7 @@ dstr *dstr_with_initial(const char *initial)
         return 0;
     str->end = strlen(initial);
     str->growth_rate = 2;
-    str->allocd_mem = str->end;
+    str->allocd_mem = str->end + 1;
     str->buf = strdup(initial);
     if (!str->buf)
         return 0;
@@ -105,6 +106,7 @@ dstr *dstr_with_prealloc(unsigned int sz)
         return 0;
     str->end = 0;
     str->buf = 0;
+    str->allocd_mem = 0;
     str->growth_rate = 2;
     if (!alloc_more(str, pre_alloc_mem))
         return 0;
@@ -188,7 +190,7 @@ void dstr_growth_rate(dstr *dest, int rate)
     dest->growth_rate = rate;
 }
 
-/***************************** DYNAMIC STRING LIST  ******************************/
+/**************************** DYNAMIC STRING LIST  ****************************/
 
 dstr_list *dstr_list_new()
 {
