@@ -259,10 +259,177 @@ void test_dstr_list_size()
     dstr_list_decref(list);
 }
 
+/************************** DYNAMIC STRING VECTOR  ****************************/
+
+void test_dstr_vector_new()
+{
+    dstr_vector *vec = dstr_vector_new();
+    CU_ASSERT_PTR_NOT_NULL(vec);
+    dstr_vector_decref(vec);
+}
+
+void test_dstr_vector_insert()
+{
+    dstr_vector *vec = dstr_vector_new();
+    CU_ASSERT_PTR_NOT_NULL(vec);
+    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol1")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol2")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol3")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol4")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol5")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, 3, dstr_with_initial("liksom")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, 3, dstr_with_initial("hei")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, 3, dstr_with_initial("hei")));
+
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[0]), "lol1");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[1]), "lol2");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[2]), "lol3");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[3]), "hei");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[4]), "hei");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[5]), "liksom");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[6]), "lol4");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[7]), "lol5");
+
+    dstr_vector_decref(vec);
+}
+
+void test_dstr_vector_remove()
+{
+    dstr_vector *vec = dstr_vector_new();
+    CU_ASSERT_PTR_NOT_NULL(vec);
+    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol1")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol2")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol3")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol4")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol5")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, 3, dstr_with_initial("liksom")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, 3, dstr_with_initial("hei")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, 3, dstr_with_initial("hei")));
+
+    dstr_vector_remove(vec, 1);
+
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[0]), "lol1");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[1]), "lol3");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[2]), "hei");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[3]), "hei");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[4]), "liksom");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[5]), "lol4");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[6]), "lol5");
+
+    dstr_vector_decref(vec);
+}
+
+void test_dstr_vector_push_front()
+{
+    dstr *str = dstr_with_initial("some data");
+    dstr *str2 = dstr_with_initial("some more data");
+    dstr_vector *vec = dstr_vector_new();
+    dstr_vector_push_front(vec, str);
+    dstr_vector_push_front(vec, str2);
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[0]), "some more data");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[1]), "some data");
+    dstr_vector_decref(vec);
+    dstr_decref(str);
+    dstr_decref(str2);
+}
+
+void test_dstr_vector_push_front_decref()
+{
+    dstr_vector *vec = dstr_vector_new();
+    dstr_vector_push_front_decref(vec, dstr_with_initial("some data"));
+    dstr_vector_push_front_decref(vec, dstr_with_initial("some more data"));
+    dstr_vector_push_front_decref(vec, dstr_with_initial("random data"));
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[0]), "random data");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[1]), "some more data");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[2]), "some data");
+    dstr_vector_decref(vec);
+}
+
+void test_dstr_vector_push_back()
+{
+    dstr *str = dstr_with_initial("some data");
+    dstr *str2 = dstr_with_initial("some more data");
+    dstr_vector *vec = dstr_vector_new();
+    dstr_vector_push_back(vec, str);
+    dstr_vector_push_back(vec, str2);
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[0]), "some data");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[1]), "some more data");
+    dstr_vector_decref(vec);
+    dstr_decref(str);
+    dstr_decref(str2);
+}
+
+void test_dstr_vector_push_back_decref()
+{
+    dstr_vector *vec = dstr_vector_new();
+    dstr_vector_push_back_decref(vec, dstr_with_initial("some data"));
+    dstr_vector_push_back_decref(vec, dstr_with_initial("some more data"));
+    dstr_vector_push_back_decref(vec, dstr_with_initial("random data"));
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[0]), "some data");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[1]), "some more data");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(vec->arr[2]), "random data");
+    dstr_vector_decref(vec);
+}
+
+void test_dstr_vector_back()
+{
+    dstr_vector *vec = dstr_vector_new();
+    dstr_vector_push_back_decref(vec, dstr_with_initial("some data"));
+    dstr_vector_push_back_decref(vec, dstr_with_initial("some more data"));
+
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(dstr_vector_back(vec)), "some more data");
+    dstr_vector_pop_back(vec);
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(dstr_vector_back(vec)), "some data");
+    dstr_vector_pop_back(vec);
+
+    dstr_vector_decref(vec);
+}
+
+void test_dstr_vector_front()
+{
+    dstr_vector *vec = dstr_vector_new();
+    dstr_vector_push_front_decref(vec, dstr_with_initial("some data"));
+    dstr_vector_push_front_decref(vec, dstr_with_initial("some more data"));
+    dstr_vector_push_front_decref(vec, dstr_with_initial("even more data"));
+
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(dstr_vector_front(vec)), "even more data");
+    dstr_vector_pop_front(vec);
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(dstr_vector_front(vec)), "some more data");
+    dstr_vector_pop_front(vec);
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(dstr_vector_front(vec)), "some data");
+    dstr_vector_pop_front(vec);
+
+    dstr_vector_decref(vec);
+}
+
+void test_dstr_vector_is_empty()
+{
+    dstr_vector *vec = dstr_vector_new();
+    CU_ASSERT(dstr_vector_is_empty(vec));
+    dstr_vector_push_front_decref(vec, dstr_with_initial("some more data"));
+    CU_ASSERT(!dstr_vector_is_empty(vec));
+    dstr_vector_decref(vec);
+}
+
+void test_dstr_vector_size()
+{
+    dstr_vector *vec = dstr_vector_prealloc(10000);
+    int i;
+
+    CU_ASSERT_EQUAL(dstr_vector_size(vec), 0);
+    dstr_vector_push_front_decref(vec, dstr_with_initial("some more data"));
+    CU_ASSERT_EQUAL(dstr_vector_size(vec), 1);
+    for (i = 0; i < 10000; i++){
+        dstr_vector_push_back_decref(vec, dstr_with_initial("some more data"));
+    }
+    CU_ASSERT_EQUAL(dstr_vector_size(vec), 10001);
+
+    dstr_vector_decref(vec);
+}
+
 int main()
 {
-   CU_pSuite dstr_suite;
-   CU_pSuite dstr_list_suite;
+   CU_pSuite dstr_suite, dstr_list_suite, dstr_vector_suite;
 
    if (CU_initialize_registry() != CUE_SUCCESS)
       return CU_get_error();
@@ -272,8 +439,12 @@ int main()
       CU_cleanup_registry();
       return CU_get_error();
    }
-
    dstr_list_suite = CU_add_suite("dstr_list", 0,0);
+   if (!dstr_list_suite){
+      CU_cleanup_registry();
+      return CU_get_error();
+   }
+   dstr_vector_suite = CU_add_suite("dstr_vector", 0,0);
    if (!dstr_list_suite){
       CU_cleanup_registry();
       return CU_get_error();
@@ -308,8 +479,24 @@ int main()
       return CU_get_error();
    }
 
+   if (!CU_add_test(dstr_vector_suite, "dstr_vector_new", test_dstr_vector_new) ||
+           !CU_add_test(dstr_vector_suite, "dstr_vector_insert", test_dstr_vector_insert) ||
+           !CU_add_test(dstr_vector_suite, "dstr_vector_push_front", test_dstr_vector_push_front) ||
+           !CU_add_test(dstr_vector_suite, "dstr_vector_push_front_decref", test_dstr_vector_push_front_decref) ||
+           !CU_add_test(dstr_vector_suite, "dstr_vector_push_back", test_dstr_vector_push_back) ||
+           !CU_add_test(dstr_vector_suite, "dstr_vector_push_back_decref", test_dstr_vector_push_back_decref) ||
+           !CU_add_test(dstr_vector_suite, "dstr_vector_back", test_dstr_vector_back) ||
+           !CU_add_test(dstr_vector_suite, "dstr_vector_front", test_dstr_vector_front) ||
+           !CU_add_test(dstr_vector_suite, "dstr_vector_is_empty", test_dstr_vector_is_empty) ||
+           !CU_add_test(dstr_vector_suite, "dstr_vector_size", test_dstr_vector_size) ||
+           !CU_add_test(dstr_vector_suite, "dstr_vector_remove", test_dstr_vector_remove)){
+      CU_cleanup_registry();
+      return CU_get_error();
+   }
+
    CU_basic_set_mode(CU_BRM_VERBOSE);
    CU_basic_run_tests();
    CU_cleanup_registry();
    return CU_get_error();
 }
+

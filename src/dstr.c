@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <malloc.h>
 
 #include "dstr.h"
@@ -346,4 +347,180 @@ dstr *dstr_list_to_dstr(const char *sep, dstr_list *list)
     }
 
     return str;
+}
+
+/************************* DYNAMIC VECTOR LIST  *******************************/
+
+dstr_vector *dstr_vector_new()
+{
+    dstr_vector *vec = malloc(sizeof(dstr_vector));
+    if (!vec)
+        return 0;
+    vec->ref = 1;
+    vec->space = 0;
+    vec->arr = 0;
+    vec->sz = 0;
+    return vec;
+}
+
+dstr_vector *dstr_vector_prealloc(unsigned int elements)
+{
+    dstr_vector *vec = malloc(sizeof(dstr_vector));
+    if (!vec)
+        return 0;
+    vec->ref = 1;
+    vec->arr = malloc(sizeof(dstr*) * elements);
+    if (!vec->arr){
+        free(vec);
+        return 0;
+    }
+    vec->space = elements;
+    vec->sz = 0;
+    return vec;
+}
+
+void dstr_vector_decref(dstr_vector *vec)
+{
+    int i;
+    vec->ref--;
+    if (!vec->ref){
+        for (i = 0; i < vec->sz; i++){
+            dstr_decref(vec->arr[i]);
+        }
+        free(vec->arr);
+        free(vec);
+    }
+}
+
+void dstr_vector_incref(dstr_vector *vec)
+{
+    vec->ref++;
+}
+
+static int __dstr_vector_alloc(dstr_vector *vec, unsigned int elements)
+{
+    int alloc = elements * sizeof(dstr *);
+    vec->arr = (dstr **)realloc(vec->arr, alloc);
+    if (!vec->arr)
+        return 0;
+    vec->space = elements;
+    return 1;
+}
+
+static int __dstr_vector_can_hold(const dstr_vector *vec, unsigned int elements)
+{
+    if (vec->space >= elements)
+        return 1;
+    return 0;
+}
+
+int dstr_vector_insert(dstr_vector *vec, int pos, dstr *str)
+{
+    int new_sz, move_n, move_ptr;
+
+    new_sz = vec->sz + 1;
+    if (!__dstr_vector_can_hold(vec, new_sz)){
+        if (!__dstr_vector_alloc(vec, new_sz))
+            return 0;
+    }
+    if (pos == DSTR_VECTOR_END){
+        vec->arr[vec->sz] = str;
+        vec->sz++;
+        dstr_incref(str);
+        return 1;
+    } else {
+        move_n = vec->sz - pos;
+        move_ptr = vec->sz;
+        while(move_n){
+            vec->arr[move_ptr] = vec->arr[move_ptr-1];
+            move_ptr--;
+            move_n--;
+        }
+
+        vec->arr[pos] = str;
+        vec->sz++;
+        dstr_incref(str);
+        return 1;
+    }
+    return 0;
+}
+
+int dstr_vector_insert_decref(dstr_vector *vec, int pos, dstr *str)
+{
+    int rc = dstr_vector_insert(vec, pos, str);
+    if (rc)
+        dstr_decref(str);
+    return rc;
+}
+
+int dstr_vector_push_front(dstr_vector *vec, dstr *str)
+{
+    return dstr_vector_insert(vec, DSTR_VECTOR_BEGIN, str);
+}
+
+int dstr_vector_push_front_decref(dstr_vector *vec, dstr *str)
+{
+    return dstr_vector_insert_decref(vec, DSTR_VECTOR_BEGIN, str);
+}
+
+int dstr_vector_push_back(dstr_vector *vec, dstr *str)
+{
+    return dstr_vector_insert(vec, DSTR_VECTOR_END, str);
+}
+
+int dstr_vector_push_back_decref(dstr_vector *vec, dstr *str)
+{
+    return dstr_vector_insert_decref(vec, DSTR_VECTOR_END, str);
+}
+
+void dstr_vector_pop_back(dstr_vector *vec)
+{
+    dstr_vector_remove(vec, DSTR_VECTOR_END);
+}
+
+void dstr_vector_pop_front(dstr_vector *vec)
+{
+    dstr_vector_remove(vec, DSTR_VECTOR_BEGIN);
+}
+
+dstr *dstr_vector_back(dstr_vector *vec)
+{
+    dstr *str = vec->arr[vec->sz - 1];
+    return str;
+}
+
+dstr *dstr_vector_front(dstr_vector *vec)
+{
+    dstr *str = vec->arr[DSTR_VECTOR_BEGIN];
+    return str;
+}
+
+int dstr_vector_is_empty(const dstr_vector *vec)
+{
+    return !vec->sz;
+}
+
+int dstr_vector_size(const dstr_vector *vec)
+{
+    return vec->sz;
+}
+
+int dstr_vector_remove(dstr_vector *vec, int pos)
+{
+    int x, sz = vec->sz - 1;
+
+    if (pos == DSTR_VECTOR_END){
+        dstr_decref(vec->arr[sz]);
+        vec->arr[sz] = 0;
+        vec->sz--;
+        return 1;
+    } else {
+        dstr_decref(vec->arr[pos]);
+        for (x = pos; x != sz; x++){
+            vec->arr[x] = vec->arr[x + 1];
+        }
+        vec->sz--;
+        return 1;
+    }
+    return 0;
 }

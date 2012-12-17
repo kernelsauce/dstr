@@ -20,8 +20,6 @@
     OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
 
-#include <malloc.h>
-
 #ifndef _DSTR_H
 #define _DSTR_H 1
 
@@ -44,6 +42,13 @@ typedef struct dstr_list {
     dstr_link_t *last;
     int ref;
 } dstr_list;
+
+typedef struct dstr_vector{
+    unsigned int sz;
+    unsigned int space;
+    unsigned int ref;
+    dstr **arr;
+} dstr_vector;
 
 /********************* DYNAMIC STRING PUBLIC API ******************************/
 
@@ -238,5 +243,28 @@ void dstr_list_incref (dstr_list *list);
  * @return A dynamic string.
  */
 dstr *dstr_list_to_dstr(const char *sep, dstr_list *list);
+
+/********************* DYNAMIC VECTOR LIST PUBLIC API *************************/
+
+#define DSTR_VECTOR_END 0xffffff ///<
+#define DSTR_VECTOR_BEGIN  0x0
+
+dstr_vector *dstr_vector_new();
+dstr_vector *dstr_vector_prealloc(unsigned int elements);
+int dstr_vector_insert(dstr_vector *vec, int pos, dstr *str);
+int dstr_vector_insert_decref(dstr_vector *vec, int pos, dstr *str);
+int dstr_vector_push_front(dstr_vector *vec, dstr *str);
+int dstr_vector_push_front_decref(dstr_vector *vec, dstr *str);
+int dstr_vector_push_back(dstr_vector *vec, dstr *str);
+int dstr_vector_push_back_decref(dstr_vector *vec, dstr *str);
+void dstr_vector_pop_back(dstr_vector *vec);
+void dstr_vector_pop_front(dstr_vector *vec);
+dstr *dstr_vector_back(dstr_vector *vec);
+dstr *dstr_vector_front(dstr_vector *vec);
+int dstr_vector_is_empty(const dstr_vector *vec);
+int dstr_vector_size(const dstr_vector *vec);
+int dstr_vector_remove(dstr_vector *vec, int pos);
+void dstr_vector_decref(dstr_vector *vec);
+void dstr_vector_incref(dstr_vector *vec);
 
 #endif /* dstr.h */
