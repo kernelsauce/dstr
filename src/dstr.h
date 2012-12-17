@@ -348,6 +348,14 @@ dstr *dstr_vector_back(dstr_vector *vec);
 dstr *dstr_vector_front(dstr_vector *vec);
 
 /**
+ * Get string from position.
+ * @param vec The vector to get from.
+ * @param pos The position to return.
+ * @return dstr at the position.
+ */
+dstr *dstr_vector_at(dstr_vector *vec, int pos);
+
+/**
  * Check if a vector is empty or not.
  * @param vec The vector to check.
  * @return 1 if empty, 0 if not empty.

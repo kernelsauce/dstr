@@ -402,6 +402,20 @@ void test_dstr_vector_front()
     dstr_vector_decref(vec);
 }
 
+void test_dstr_vector_at()
+{
+    dstr_vector *vec = dstr_vector_new();
+    dstr_vector_push_front_decref(vec, dstr_with_initial("some data"));
+    dstr_vector_push_front_decref(vec, dstr_with_initial("some more data"));
+    dstr_vector_push_front_decref(vec, dstr_with_initial("even more data"));
+
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(dstr_vector_at(vec, 0)), "even more data");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(dstr_vector_at(vec, 1)), "some more data");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(dstr_vector_at(vec, 2)), "some data");
+
+    dstr_vector_decref(vec);
+}
+
 void test_dstr_vector_is_empty()
 {
     dstr_vector *vec = dstr_vector_new();
@@ -489,6 +503,7 @@ int main()
            !CU_add_test(dstr_vector_suite, "dstr_vector_front", test_dstr_vector_front) ||
            !CU_add_test(dstr_vector_suite, "dstr_vector_is_empty", test_dstr_vector_is_empty) ||
            !CU_add_test(dstr_vector_suite, "dstr_vector_size", test_dstr_vector_size) ||
+           !CU_add_test(dstr_vector_suite, "dstr_vector_at", test_dstr_vector_at) ||
            !CU_add_test(dstr_vector_suite, "dstr_vector_remove", test_dstr_vector_remove)){
       CU_cleanup_registry();
       return CU_get_error();

@@ -495,6 +495,12 @@ dstr *dstr_vector_front(dstr_vector *vec)
     return str;
 }
 
+dstr *dstr_vector_at(dstr_vector *vec, int pos)
+{
+    dstr *str = vec->arr[pos];
+    return str;
+}
+
 int dstr_vector_is_empty(const dstr_vector *vec)
 {
     return !vec->sz;
