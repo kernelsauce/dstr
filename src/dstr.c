@@ -33,27 +33,27 @@ static int alloc_more(dstr* str, int sz)
 {
     int more_mem;
 
-    more_mem = (int)(str->allocd_mem + (sz * sizeof(char))) * str->growth_rate;
-    str->allocd_mem = more_mem;
-    str->buf = realloc(str->buf, more_mem);
-    if (!str->buf)
+    more_mem = (int)(str->mem + (sz * sizeof(char))) * str->grow_r;
+    str->mem = more_mem;
+    str->data = realloc(str->data, more_mem);
+    if (!str->data)
         return 0;
     return 1;
 }
 
 static int can_hold(const dstr *str, int chars)
 {
-    if (!str->buf)
+    if (!str->data)
         return 0;
     else
-        return (chars < str->allocd_mem);
+        return (chars < str->mem);
 }
 
 void dstr_decref(dstr *str)
 {
     str->ref--;
     if (!str->ref){
-        free(str->buf);
+        free(str->data);
         free(str);
     }
 }
@@ -65,7 +65,7 @@ void dstr_incref(dstr *str)
 
 const char *dstr_to_cstr_const(const dstr* str)
 {
-    return str->buf;
+    return str->data;
 }
 
 dstr *dstr_new()
@@ -74,10 +74,10 @@ dstr *dstr_new()
 
     if (!str)
         return 0;
-    str->end = 0;
-    str->buf = 0;
-    str->growth_rate = 2;
-    str->allocd_mem = 0;
+    str->sz = 0;
+    str->data = 0;
+    str->grow_r = 2;
+    str->mem = 0;
     str->ref = 1;
     return str;
 }
@@ -88,11 +88,11 @@ dstr *dstr_with_initial(const char *initial)
 
     if (!str)
         return 0;
-    str->end = strlen(initial);
-    str->growth_rate = 2;
-    str->allocd_mem = str->end + 1;
-    str->buf = strdup(initial);
-    if (!str->buf)
+    str->sz = strlen(initial);
+    str->grow_r = 2;
+    str->mem = str->sz + 1;
+    str->data = strdup(initial);
+    if (!str->data)
         return 0;
     str->ref = 1;
     return str;
@@ -105,13 +105,13 @@ dstr *dstr_with_prealloc(unsigned int sz)
 
     if (!str)
         return 0;
-    str->end = 0;
-    str->growth_rate = 2;
-    str->allocd_mem = pre_alloc_mem;
-    str->buf = malloc(pre_alloc_mem);
-    if (!str->buf)
+    str->sz = 0;
+    str->grow_r = 2;
+    str->mem = pre_alloc_mem;
+    str->data = malloc(pre_alloc_mem);
+    if (!str->data)
         return 0;
-    str->buf[0] = '\0';
+    str->data[0] = '\0';
     str->ref = 1;
     return str;
 }
@@ -119,11 +119,11 @@ dstr *dstr_with_prealloc(unsigned int sz)
 int dstr_compact(dstr *str)
 {
     int alloc;
-    if (str->allocd_mem > str->end){
-        alloc = str->end + 1;
-        str->buf = realloc(str->buf, str->end + 1);
-        str->allocd_mem = alloc;
-        if (str->buf)
+    if (str->mem > str->sz){
+        alloc = str->sz + 1;
+        str->data = realloc(str->data, str->sz + 1);
+        str->mem = alloc;
+        if (str->data)
             return 1;
     }
     return 0;
@@ -131,25 +131,25 @@ int dstr_compact(dstr *str)
 
 int dstr_append(dstr* dest, const dstr* src)
 {
-    int total = src->end + dest->end;
+    int total = src->sz + dest->sz;
     if (!can_hold(dest, total + 1)){
         if (!alloc_more(dest, total))
             return 0;
     }
-    strcpy(dest->buf+dest->end, src->buf);
-    dest->end = total;
+    strcpy(dest->data+dest->sz, src->data);
+    dest->sz = total;
     return 1;
 }
 
 int dstr_append_cstr(dstr* dest, const char *src)
 {
-    int total = strlen(src) + dest->end;
+    int total = strlen(src) + dest->sz;
     if (!can_hold(dest, total + 1)){
         if (!alloc_more(dest, total))
             return 0;
     }
-    strcpy(dest->buf+dest->end, src);
-    dest->end = total;
+    strcpy(dest->data+dest->sz, src);
+    dest->sz = total;
     return 1;
 }
 
@@ -166,7 +166,7 @@ int dstr_append_decref(dstr* dest, dstr* src)
 dstr *dstr_copy(const dstr *copy)
 {
     int rc;
-    dstr* str = dstr_with_prealloc(copy->end + 1);
+    dstr* str = dstr_with_prealloc(copy->sz + 1);
     if (!str)
         return 0;
     rc = dstr_append(str, copy);
@@ -177,20 +177,20 @@ dstr *dstr_copy(const dstr *copy)
 
 void dstr_clear(dstr *str)
 {
-    while (str->end){
-        str->end--;
-        str->buf[str->end] = 0;
+    while (str->sz){
+        str->sz--;
+        str->data[str->sz] = 0;
     }
 }
 
 int dstr_print(const dstr *src)
 {
-    return printf("%s", src->buf);
+    return printf("%s", src->data);
 }
 
 void dstr_growth_rate(dstr *dest, int rate)
 {
-    dest->growth_rate = rate;
+    dest->grow_r = rate;
 }
 
 /**************************** DYNAMIC STRING LIST  ****************************/
@@ -200,8 +200,8 @@ dstr_list *dstr_list_new()
     dstr_list *list = malloc(sizeof(dstr_list));
     if (!list)
         return 0;
-    list->first = 0;
-    list->last = 0;
+    list->head = 0;
+    list->tail = 0;
     list->ref = 1;
     return list;
 }
@@ -217,13 +217,13 @@ int dstr_list_add(dstr_list *list, dstr *str)
     link->str = str;
     dstr_incref(str);
 
-    if (list->last) {
-        list->last->next = link;
-        link->prev = list->last;
-        list->last = link;
+    if (list->tail) {
+        list->tail->next = link;
+        link->prev = list->tail;
+        list->tail = link;
     } else {
-        list->first = link;
-        list->last = link;
+        list->head = link;
+        list->tail = link;
     }
     return 1;
 }
@@ -249,15 +249,15 @@ void dstr_list_remove(dstr_list *list, dstr_link_t *link)
             next->prev = prev;
         } else {
             prev->next = 0;
-            list->last = prev;
+            list->tail = prev;
         }
     } else {
         if (next){
             next->prev = 0;
-            list->first = next;
+            list->head = next;
         } else {
-            list->first = 0;
-            list->last = 0;
+            list->head = 0;
+            list->tail = 0;
         }
     }
 
@@ -269,7 +269,7 @@ int dstr_list_size(const dstr_list *list)
 {
     dstr_link_t *link;
     int sz = 0;
-    for (link = list->first; link; link = link->next){
+    for (link = list->head; link; link = link->next){
         sz++;
     }
     return sz;
@@ -281,7 +281,7 @@ void dstr_list_traverse(dstr_list * list,
 {
     dstr_link_t *link;
 
-    for (link = list->first; link; link = link->next){
+    for (link = list->head; link; link = link->next){
         callback((void *) link->str, user_data);
     }
 }
@@ -292,7 +292,7 @@ void dstr_list_traverse_reverse (dstr_list *list,
 {
     dstr_link_t * link;
 
-    for (link = list->last; link; link = link->prev) {
+    for (link = list->tail; link; link = link->prev) {
         callback ((void *) link->str, userdata);
     }
 }
@@ -301,7 +301,7 @@ void dstr_list_traverse_delete (dstr_list * list, int (*callback)(dstr *))
 {
     dstr_link_t *link;
 
-    for (link = list->first; link; link = link->next) {
+    for (link = list->head; link; link = link->next) {
         if (callback((void *) link->str)) {
             dstr_list_remove(list, link);
         }
@@ -315,7 +315,7 @@ void dstr_list_decref (dstr_list *list)
 
     list->ref--;
     if (!list->ref){
-        for (link = list->first; link; link = next){
+        for (link = list->head; link; link = next){
             next = link->next;
             dstr_decref(link->str);
             free(link);
@@ -335,13 +335,13 @@ dstr *dstr_list_to_dstr(const char *sep, dstr_list *list)
     dstr_link_t *link;
 
     if (sep){
-        for (link = list->first; link; link = link->next){
+        for (link = list->head; link; link = link->next){
             dstr_append(str, link->str);
             if (link->next)
                 dstr_append_cstr(str, sep);
         }
     } else {
-        for (link = list->first; link; link = link->next){
+        for (link = list->head; link; link = link->next){
             dstr_append(str, link->str);
         }
     }

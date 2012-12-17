@@ -24,11 +24,11 @@
 #define _DSTR_H 1
 
 typedef struct dstr{
-    char* buf;
-    unsigned int allocd_mem;
-    unsigned int end;
+    char* data;
+    unsigned int sz;
+    unsigned int mem;
     unsigned int ref;
-    unsigned int growth_rate;
+    unsigned int grow_r;
 } dstr;
 
 typedef struct dstr_link_t {
@@ -38,16 +38,16 @@ typedef struct dstr_link_t {
 } dstr_link_t;
 
 typedef struct dstr_list {
-    dstr_link_t *first;
-    dstr_link_t *last;
+    dstr_link_t *head;
+    dstr_link_t *tail;
     int ref;
 } dstr_list;
 
 typedef struct dstr_vector{
+    dstr **arr;
     unsigned int sz;
     unsigned int space;
     unsigned int ref;
-    dstr **arr;
 } dstr_vector;
 
 /********************* DYNAMIC STRING PUBLIC API ******************************/
@@ -246,8 +246,8 @@ dstr *dstr_list_to_dstr(const char *sep, dstr_list *list);
 
 /********************* DYNAMIC VECTOR LIST PUBLIC API *************************/
 
-#define DSTR_VECTOR_END 0xffffff ///<
-#define DSTR_VECTOR_BEGIN  0x0
+#define DSTR_VECTOR_END 0xffffff ///< End of vector position.
+#define DSTR_VECTOR_BEGIN  0x0 ///< Start of vector position.
 
 dstr_vector *dstr_vector_new();
 dstr_vector *dstr_vector_prealloc(unsigned int elements);

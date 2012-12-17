@@ -34,7 +34,7 @@ void new_dstr_prealloc()
 {
     dstr *str = dstr_with_prealloc(100);
     CU_ASSERT_PTR_NOT_NULL(str);
-    CU_ASSERT_EQUAL(str->allocd_mem, 100);
+    CU_ASSERT_EQUAL(str->mem, 100);
     dstr_decref(str);
 }
 
@@ -116,23 +116,23 @@ void test_dstr_compact()
 {
     dstr *str = dstr_with_initial("some data");
     CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(str), "some data");
-    CU_ASSERT_EQUAL(str->allocd_mem, 10);
+    CU_ASSERT_EQUAL(str->mem, 10);
     dstr_clear(str);
     dstr_append_cstr(str, "hi!");
     dstr_compact(str);
-    CU_ASSERT_EQUAL(str->allocd_mem, 4);
+    CU_ASSERT_EQUAL(str->mem, 4);
     dstr_decref(str);
 }
 
 void test_dstr_growth_rate()
 {
     dstr *str = dstr_with_initial("data");
-    int alloc_before = str->allocd_mem;
+    int alloc_before = str->mem;
 
     dstr_growth_rate(str, 5);
     dstr_append_cstr(str, "data");
-    CU_ASSERT_EQUAL(str->allocd_mem,
-                    (alloc_before + (8 * sizeof(char))) * str->growth_rate);
+    CU_ASSERT_EQUAL(str->mem,
+                    (alloc_before + (8 * sizeof(char))) * str->grow_r);
     dstr_decref(str);
 }
 
