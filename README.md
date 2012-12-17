@@ -3,7 +3,7 @@ dstr
 
 <b>Reference counted dynamic string and string containers</b>
 
-Use it to ease the work with strings in C.
+Use it to ease the work with strings in C. Doxygen documentation is available by generating it from source.
 
 Author: John Abrahamsen <JhnAbrhmsn@gmail.com>.
 
@@ -13,7 +13,7 @@ Author: John Abrahamsen <JhnAbrhmsn@gmail.com>.
 	dstr *str2 = dstr_with_initial(" to me");
 	
 	dstr_append(str, str2);
-	dstr_print(str);
+	printf("%s", dstr_from_dstr_to_ctr(str));
 	dstr_decref(str);
 	dstr_decref(str2);
 
