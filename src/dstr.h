@@ -1,4 +1,4 @@
-/*  Reference counted dynamic string and string list.
+/*  Reference counted dynamic string and string containers.
     Copyright 2012 John Abrahamsen <jhnabrhmsn@gmail.com>
 
     Permission is hereby granted, free of charge, to any person obtaining
@@ -24,11 +24,11 @@
 #define _DSTR_H 1
 
 typedef struct dstr{
-    char* data;
-    unsigned int sz;
-    unsigned int mem;
-    unsigned int ref;
-    unsigned int grow_r;
+    char* data; ///< Internal pointer.
+    unsigned int sz; ///< Current size of string.
+    unsigned int mem; ///< Current memory allocated.
+    unsigned int ref; ///< Reference count.
+    unsigned int grow_r; ///< Memory growth rate.
 } dstr;
 
 typedef struct dstr_link_t {
@@ -74,7 +74,8 @@ dstr *dstr_with_prealloc(unsigned int sz);
 
 /**
  * Returns pointer to C string from given dynamic string.
- * @note When the dynamic string is changed the data of the pointer is also changed.
+ * @note When the dynamic string is changed the data of the pointer is
+ *  also changed, and vice versa.
  * @param str Source dynamic string to return C string from.
  * @return Zero terminated C string from dynamic string.
  */
@@ -249,22 +250,140 @@ dstr *dstr_list_to_dstr(const char *sep, dstr_list *list);
 #define DSTR_VECTOR_END 0xffffff ///< End of vector position.
 #define DSTR_VECTOR_BEGIN  0x0 ///< Start of vector position.
 
+/**
+ * Create a new vector with no initial size.
+ * @note To avoid thrashing of reallocations it is advised to prealloc large
+ *  vectors with dstr_vector_prealloc();
+ * @see dstr_vector_prealloc
+ * @return New dstr_vector.
+ */
 dstr_vector *dstr_vector_new();
+
+/**
+ * Creates a new vector with a initial size.
+ * @param elements The amount of strings to pre allocate for.
+ * @return New dstr_vector.
+ */
 dstr_vector *dstr_vector_prealloc(unsigned int elements);
+
+/**
+ * Insert a string into position in vector.
+ * @note It is slow to insert elements into the middle or front of vectors.
+ * @note There is no safety that prevents out of boundary positions to be used!
+ * @param vec Vector to insert into.
+ * @param pos Position to insert in.
+ * @param str The string to insert.
+ * @return 0 on failure, 1 on success.
+ */
 int dstr_vector_insert(dstr_vector *vec, int pos, dstr *str);
+
+/**
+ * Insert a string into position in vector and steal its reference.
+ * @note It is slow to insert elements into the middle of vectors.
+ * @note There is no safety that prevents out of boundary positions to be used!
+ * @param vec Vector to insert into.
+ * @param pos Position to insert in.
+ * @param str The string to insert.
+ * @return 0 on failure, 1 on success.
+ * @see dstr_vector_insert
+ */
 int dstr_vector_insert_decref(dstr_vector *vec, int pos, dstr *str);
+
+/**
+ * Push a string to front of vector.
+ * @note Insertions into front of vectors are slow.
+ * @param vec Vector to insert into.
+ * @param str The string to push.
+ * @return 0 on failure, 1 on success.
+ */
 int dstr_vector_push_front(dstr_vector *vec, dstr *str);
+
+/**
+ * Push a string to front of vector and steal its reference.
+ * @note Insertions into front of vectors are slow.
+ * @param vec Vector to insert into.
+ * @param str The string to push.
+ * @return 0 on failure, 1 on success.
+ */
 int dstr_vector_push_front_decref(dstr_vector *vec, dstr *str);
+
+/**
+ * Push a string to back of vector.
+ * @param vec Vector to insert into.
+ * @param str The string to push.
+ * @return 0 on failure, 1 on success.
+ */
 int dstr_vector_push_back(dstr_vector *vec, dstr *str);
+
+/**
+ * Push a string to back of vector and steal its reference.
+ * @param vec Vector to insert into.
+ * @param str The string to push.
+ * @return 0 on failure, 1 on success.
+ */
 int dstr_vector_push_back_decref(dstr_vector *vec, dstr *str);
+
+/**
+ * Pop item from back of vector.
+ * @param vec Vector to pop from.
+ */
 void dstr_vector_pop_back(dstr_vector *vec);
+
+/**
+ * Pop item from front of vector.
+ * @param vec Vector to pop from.
+ */
 void dstr_vector_pop_front(dstr_vector *vec);
+
+/**
+ * Return item from back of vector.
+ * @param vec Vector to return from.
+ */
 dstr *dstr_vector_back(dstr_vector *vec);
+
+/**
+ * Return item from front of vector.
+ * @param vec Vector to return from.
+ */
 dstr *dstr_vector_front(dstr_vector *vec);
+
+/**
+ * Check if a vector is empty or not.
+ * @param vec The vector to check.
+ * @return 1 if empty, 0 if not empty.
+ */
 int dstr_vector_is_empty(const dstr_vector *vec);
+
+/**
+ * Get the size of vector.
+ * @param vec Vector to count.
+ * @return The current amount of strings in the vector.
+ */
 int dstr_vector_size(const dstr_vector *vec);
+
+/**
+ * Remove a string at given position from a vector.
+ * The positions after the removed position are moved to close gap.
+ * @note Removing items from the middle or front of a vector is slow.
+ * @param vec The vector to remove from.
+ * @param pos The position to remove.
+ * @return
+ */
 int dstr_vector_remove(dstr_vector *vec, int pos);
+
+/**
+ * Decrement reference count by one. When no more references exists the
+ * vector is emptied (and strings decrefed) and free'd.
+ * @param vec The vector to decref.
+ * @see dstr_vector_incref
+ */
 void dstr_vector_decref(dstr_vector *vec);
+
+/**
+ * Increment referece count by one.
+ * @see dstr_vector_decref
+ * @param vec The vector to decref.
+ */
 void dstr_vector_incref(dstr_vector *vec);
 
 #endif /* dstr.h */
