@@ -20,13 +20,15 @@
     OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
 
+#include <stdlib.h>
+
 #ifndef _DSTR_H
 #define _DSTR_H 1
 
 typedef struct dstr{
     char* data; ///< Internal pointer.
-    unsigned int sz; ///< Current size of string.
-    unsigned int mem; ///< Current memory allocated.
+    size_t sz; ///< Current size of string.
+    size_t mem; ///< Current memory allocated.
     unsigned int ref; ///< Reference count.
     unsigned int grow_r; ///< Memory growth rate.
 } dstr;
@@ -45,8 +47,8 @@ typedef struct dstr_list {
 
 typedef struct dstr_vector{
     dstr **arr;
-    unsigned int sz;
-    unsigned int space;
+    size_t sz;
+    size_t space;
     unsigned int ref;
 } dstr_vector;
 
@@ -143,6 +145,38 @@ void dstr_clear(dstr *str);
  * @note Not needed unless you are going from a really big string to a very small one.
  */
 int dstr_compact(dstr *str);
+
+/**
+ * Search for needle in a haystack (string).
+ * @param haystack The string to search in.
+ * @param needle The C string to search for.
+ * @return 0 if not contains, 1 if contains.
+ */
+int dstr_contains(const dstr *haystack, const char *needle);
+
+/**
+ * Search for needle in a haystack (string).
+ * @param haystack The dynamic string to search in.
+ * @param needle The dynamic string to search for.
+ * @return 0 if not contains, 1 if contains.
+ */
+int dstr_contains_dstr(const dstr *haystack, const dstr *needle);
+
+/**
+ * Check if string starts with.
+ * @param str Dynamic string to match start of.
+ * @param starts_with C string to match with.
+ * @return 0 if not starts with, 1 if starts with.
+ */
+int dstr_starts_with(const dstr *str, const char *starts_with);
+
+/**
+ * Check if string starts with.
+ * @param str Dynamic string to match start of.
+ * @param starts_with Dynamic string to match with.
+ * @return 0 if not starts with, 1 if starts with.
+ */
+int dstr_starts_with_dstr(const dstr *str, const dstr *starts_with);
 
 /**
  * Modify the growth rate of memory when doing new allocations.

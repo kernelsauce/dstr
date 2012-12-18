@@ -90,7 +90,7 @@ dstr *dstr_with_initial(const char *initial)
         return 0;
     str->sz = strlen(initial);
     str->grow_r = 2;
-    str->mem = str->sz + 1;
+    str->mem = (str->sz * sizeof(char)) + sizeof(char) ;
     str->data = strdup(initial);
     if (!str->data)
         return 0;
@@ -107,10 +107,10 @@ dstr *dstr_with_prealloc(unsigned int sz)
         return 0;
     str->sz = 0;
     str->grow_r = 2;
-    str->mem = pre_alloc_mem;
     str->data = malloc(pre_alloc_mem);
     if (!str->data)
         return 0;
+    str->mem = pre_alloc_mem;
     str->data[0] = '\0';
     str->ref = 1;
     return str;
@@ -120,13 +120,51 @@ int dstr_compact(dstr *str)
 {
     int alloc;
     if (str->mem > str->sz){
-        alloc = str->sz + 1;
-        str->data = realloc(str->data, str->sz + 1);
+        alloc = (sizeof(char) * str->sz) + sizeof(char);
+        str->data = realloc(str->data, alloc);
         str->mem = alloc;
         if (str->data)
             return 1;
     }
     return 0;
+}
+
+int dstr_contains(const dstr *haystack, const char *needle)
+{
+    if (strstr(haystack->data, needle))
+        return 1;
+    return 0;
+}
+
+int dstr_contains_dstr(const dstr *haystack, const dstr *needle)
+{
+    if (strstr(haystack->data, needle->data))
+        return 1;
+    return 0;
+}
+
+int dstr_starts_with_dstr(const dstr *str, const dstr *starts_with)
+{
+    return dstr_starts_with(str, dstr_to_cstr_const(starts_with));
+}
+
+int dstr_starts_with(const dstr *str, const char *starts_with)
+{
+    const char *cstr;
+    int cstr_len, start_len;
+
+    cstr = dstr_to_cstr_const(str);
+    cstr_len = strlen(cstr);
+    start_len = strlen(starts_with);
+
+    if (start_len > cstr_len)
+        return 0;
+    while (start_len--){
+        if (cstr[start_len] != starts_with[start_len])
+            return 0;
+    }
+    return 1;
+
 }
 
 int dstr_append(dstr* dest, const dstr* src)
@@ -210,14 +248,14 @@ int dstr_list_add(dstr_list *list, dstr *str)
 {
     dstr_link_t *link;
 
-    link = calloc (1, sizeof (dstr_link_t));
+    link = calloc(1, sizeof(dstr_link_t));
     if (!link)
         return 0;
 
     link->str = str;
     dstr_incref(str);
 
-    if (list->tail) {
+    if (list->tail){
         list->tail->next = link;
         link->prev = list->tail;
         list->tail = link;
@@ -244,7 +282,7 @@ void dstr_list_remove(dstr_list *list, dstr_link_t *link)
     prev = link->prev;
     next = link->next;
     if (prev){
-        if (next) {
+        if (next){
             prev->next = next;
             next->prev = prev;
         } else {
@@ -369,7 +407,7 @@ dstr_vector *dstr_vector_prealloc(unsigned int elements)
     if (!vec)
         return 0;
     vec->ref = 1;
-    vec->arr = malloc(sizeof(dstr*) * elements);
+    vec->arr = malloc(elements * sizeof(dstr*));
     if (!vec->arr){
         free(vec);
         return 0;

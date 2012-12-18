@@ -1,9 +1,9 @@
 CC=gcc
-CFLAGS=-g -Wall
+CFLAGS=-g -Wall -O3
 CPP=g++
 CPPFLAGS=
 LD=gcc
-LDFLAGS=-g -Wall
+LDFLAGS=-g -Wall -O3
 
 OBJECTS=dstr_test.o ../src/dstr.o
 TARGET=dstr_test

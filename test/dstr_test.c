@@ -158,6 +158,52 @@ void test_dstr_growth_rate()
     dstr_decref(str);
 }
 
+void test_dstr_starts_with_dstr()
+{
+    dstr *match = dstr_with_initial("something to match");
+    dstr *no_match = dstr_with_initial("not to match");
+
+    dstr *match_word = dstr_with_initial("something");
+    CU_ASSERT(dstr_starts_with_dstr(match, match_word));
+    CU_ASSERT(!dstr_starts_with_dstr(no_match, match_word));
+    dstr_decref(match);
+    dstr_decref(no_match);
+    dstr_decref(match_word);
+}
+
+void test_dstr_starts_with()
+{
+    dstr *match = dstr_with_initial("something to match");
+    dstr *no_match = dstr_with_initial("not to match");
+
+    CU_ASSERT(dstr_starts_with(match, "something"));
+    CU_ASSERT(!dstr_starts_with(no_match, "something"));
+    dstr_decref(match);
+    dstr_decref(no_match);
+}
+
+void test_dstr_contains()
+{
+    dstr *str = dstr_with_initial("a big string with a small word in it to find");
+    CU_ASSERT(dstr_contains(str, "small"));
+    CU_ASSERT(!dstr_contains(str, "large"));
+    dstr_decref(str);
+}
+
+void test_dstr_contains_dstr()
+{
+    dstr *str = dstr_with_initial("a big string with a small word in it to find");
+    dstr *contains = dstr_with_initial("small");
+    dstr *not_contains = dstr_with_initial("large");
+
+    CU_ASSERT(dstr_contains_dstr(str, contains));
+    CU_ASSERT(!dstr_contains_dstr(str, not_contains));
+    dstr_decref(str);
+    dstr_decref(contains);
+    dstr_decref(not_contains);
+}
+
+
 /**************************** DYNAMIC STRING LIST  ****************************/
 
 void test_dstr_list_new()
@@ -498,6 +544,10 @@ int main()
            !CU_add_test(dstr_suite, "dstr_clear", test_dstr_clear) ||
            !CU_add_test(dstr_suite, "dstr_compact", test_dstr_compact) ||
            !CU_add_test(dstr_suite, "dstr_growth_rate", test_dstr_growth_rate) ||
+           !CU_add_test(dstr_suite, "dstr_starts_with_dstr", test_dstr_starts_with_dstr) ||
+           !CU_add_test(dstr_suite, "dstr_starts_with", test_dstr_starts_with) ||
+           !CU_add_test(dstr_suite, "dstr_contains", test_dstr_contains) ||
+           !CU_add_test(dstr_suite, "dstr_contains_dstr", test_dstr_contains_dstr) ||
            !CU_add_test(dstr_suite, "dstr_dstr_to_cstr", test_dstr_to_cstr)){
       CU_cleanup_registry();
       return CU_get_error();
