@@ -67,12 +67,21 @@ dstr *dstr_new();
  */
 dstr *dstr_with_initial(const char *initial);
 
+
+/**
+ * Create a new dynamic string object filled with initial C string up until n
+ * characters.
+ * @param initial Initial string to copy into dynamic string.
+ * @return a new dynamic string with copied initial string.
+ */
+dstr *dstr_with_initialn(const char *initial, size_t n);
+
 /**
  * Create a new dynamic string object with pre allocated space.
  * @param sz Amount of charaters to pre-allocate for.
  * @return a new dynamic string with pre-allocated space.
  */
-dstr *dstr_with_prealloc(unsigned int sz);
+dstr *dstr_with_prealloc(size_t sz);
 
 /**
  * Returns pointer to C string from given dynamic string.
@@ -124,6 +133,14 @@ int dstr_append_decref(dstr* dest, dstr* src);
 int dstr_append_cstr(dstr* dest, const char *src);
 
 /**
+ * Appends a C string up until n characters to a dynamic string.
+ * @param dest Destination string to append to.
+ * @param src Source C string to append.
+ * @return 0 on failure, 1 on success.
+ */
+int dstr_append_cstrn(dstr* dest, const char *src, size_t n);
+
+/**
  * Creates a copy of a dynamic string object.
  * @param copy The dynamic string to copy.
  * @return A independent copy of the source dynamic string, or 0 on allocation failure.
@@ -132,6 +149,7 @@ dstr *dstr_copy(const dstr *copy);
 
 /**
  * Clears contents of a dynamic string.
+ * Fills the entire memory area occupised with zero bytes.
  * @param str  The dynamic string to clear.
  * @note Will not modify reference nor free memory.
  * @see dstr_compact for a deallocation of unused space.
@@ -177,6 +195,15 @@ int dstr_starts_with(const dstr *str, const char *starts_with);
  * @return 0 if not starts with, 1 if starts with.
  */
 int dstr_starts_with_dstr(const dstr *str, const dstr *starts_with);
+
+/**
+ * Split a dynamic string to a vector.
+ * @param str String to split.
+ * @param sep Character to split on.
+ * @return Vector with string fragments. If none were found a zero sized vector
+ *  is returned.
+ */
+dstr_vector *dstr_split_to_vector(const dstr *str, const char *sep);
 
 /**
  * Modify the growth rate of memory when doing new allocations.
@@ -234,7 +261,7 @@ void dstr_list_remove(dstr_list *list, dstr_link_t *link);
  * @param list The list to count.
  * @return Amount of elements.
  */
-int dstr_list_size(const dstr_list *list);
+size_t dstr_list_size(const dstr_list *list);
 
 /**
  * Traverse a list with a callback.
@@ -401,7 +428,7 @@ int dstr_vector_is_empty(const dstr_vector *vec);
  * @param vec Vector to count.
  * @return The current amount of strings in the vector.
  */
-int dstr_vector_size(const dstr_vector *vec);
+size_t dstr_vector_size(const dstr_vector *vec);
 
 /**
  * Remove a string at given position from a vector.
@@ -411,7 +438,7 @@ int dstr_vector_size(const dstr_vector *vec);
  * @param pos The position to remove.
  * @return
  */
-int dstr_vector_remove(dstr_vector *vec, int pos);
+int dstr_vector_remove(dstr_vector *vec, size_t pos);
 
 /**
  * Decrement reference count by one. When no more references exists the

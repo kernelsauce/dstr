@@ -20,6 +20,7 @@
     OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
 
+#include <string.h>
 #include <CUnit/CUnit.h>
 #include "CUnit/Basic.h"
 #include "dstr.h"
@@ -201,6 +202,22 @@ void test_dstr_contains_dstr()
     dstr_decref(str);
     dstr_decref(contains);
     dstr_decref(not_contains);
+}
+
+void test_dstr_split_to_vector()
+{
+    dstr *str = dstr_with_initial("word1,word2,word3,word4,word5,word6");
+    dstr_vector *vec = dstr_split_to_vector(str, ",");
+
+    dstr_decref(str);
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(dstr_vector_at(vec, 0)), "word1");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(dstr_vector_at(vec, 1)), "word2");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(dstr_vector_at(vec, 2)), "word3");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(dstr_vector_at(vec, 3)), "word4");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(dstr_vector_at(vec, 4)), "word5");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(dstr_vector_at(vec, 5)), "word6");
+
+    dstr_vector_decref(vec);
 }
 
 
@@ -532,6 +549,12 @@ int main()
       return CU_get_error();
    }
 
+   printf("\n========== sizes ==========\n");
+   printf("size of size_t is: %lu bytes, %lu bits\n", sizeof(size_t), sizeof(size_t)*4);
+   printf("size of dstr is: %lu bytes, %lu bits\n", sizeof(dstr), sizeof(dstr)*4);
+   printf("size of dstr_vector is: %lu bytes, %lu bits\n", sizeof(dstr_vector), sizeof(dstr_vector)*4);
+   printf("size of dstr_list is: %lu bytes, %lu bits\n", sizeof(dstr_list), sizeof(dstr_list)*4);
+
    if (!CU_add_test(dstr_suite, "dstr_new", new_dstr_test) ||
            !CU_add_test(dstr_suite, "dstr_with_initial", new_dstr_initial_test) ||
            !CU_add_test(dstr_suite, "dstr_copy", new_dstr_from_dstr) ||
@@ -548,6 +571,7 @@ int main()
            !CU_add_test(dstr_suite, "dstr_starts_with", test_dstr_starts_with) ||
            !CU_add_test(dstr_suite, "dstr_contains", test_dstr_contains) ||
            !CU_add_test(dstr_suite, "dstr_contains_dstr", test_dstr_contains_dstr) ||
+           !CU_add_test(dstr_suite, "dstr_split_to_vector", test_dstr_split_to_vector) ||
            !CU_add_test(dstr_suite, "dstr_dstr_to_cstr", test_dstr_to_cstr)){
       CU_cleanup_registry();
       return CU_get_error();

@@ -29,11 +29,11 @@
 
 /****************************** DYNAMIC STRING ********************************/
 
-static int alloc_more(dstr* str, int sz)
+static int alloc_more(dstr* str, size_t sz)
 {
-    int more_mem;
+    size_t more_mem;
 
-    more_mem = (int)(str->mem + (sz * sizeof(char))) * str->grow_r;
+    more_mem = (str->mem + (sz * sizeof(char))) * str->grow_r;
     str->mem = more_mem;
     str->data = realloc(str->data, more_mem);
     if (!str->data)
@@ -41,7 +41,7 @@ static int alloc_more(dstr* str, int sz)
     return 1;
 }
 
-static int can_hold(const dstr *str, int chars)
+static int can_hold(const dstr *str, size_t chars)
 {
     if (!str->data)
         return 0;
@@ -98,10 +98,26 @@ dstr *dstr_with_initial(const char *initial)
     return str;
 }
 
-dstr *dstr_with_prealloc(unsigned int sz)
+dstr *dstr_with_initialn(const char *initial, size_t n)
 {
     dstr *str = malloc(sizeof(dstr));
-    int pre_alloc_mem = sizeof(char) * sz;
+
+    if (!str)
+        return 0;
+    str->sz = n;
+    str->grow_r = 2;
+    str->mem = (str->sz * sizeof(char)) + sizeof(char) ;
+    str->data = strndup(initial, n);
+    if (!str->data)
+        return 0;
+    str->ref = 1;
+    return str;
+}
+
+dstr *dstr_with_prealloc(size_t sz)
+{
+    dstr *str = malloc(sizeof(dstr));
+    size_t pre_alloc_mem = sizeof(char) * sz;
 
     if (!str)
         return 0;
@@ -148,6 +164,41 @@ int dstr_starts_with_dstr(const dstr *str, const dstr *starts_with)
     return dstr_starts_with(str, dstr_to_cstr_const(starts_with));
 }
 
+dstr_vector *dstr_split_to_vector(const dstr *str, const char *sep)
+{
+    dstr_vector *vec;
+    dstr *dstr_ptr;
+    size_t count, sep_len, occ_len;
+    const char *cstr, *occ_start, *occ_end;
+
+    cstr = dstr_to_cstr_const(str);
+    occ_start = cstr;
+    count = 0;
+    sep_len = strlen(sep);
+
+    while (*cstr != '\0'){
+        if (strncmp(cstr++, sep, sep_len))
+            continue;
+        count++;
+    }
+
+    vec = dstr_vector_prealloc(count);
+    cstr = dstr_to_cstr_const(str);
+    occ_end = strstr(occ_start, sep);
+    while (occ_end){
+        occ_end = strstr(occ_start, sep);
+        occ_len = occ_end - occ_start;
+        dstr_ptr = dstr_with_initialn(occ_start, occ_len);
+        if (!dstr_ptr)
+            return 0;
+        if (!dstr_vector_push_back_decref(vec, dstr_ptr))
+            return 0;
+        occ_start = occ_end + 1;
+    }
+
+    return vec;
+}
+
 int dstr_starts_with(const dstr *str, const char *starts_with)
 {
     const char *cstr;
@@ -191,6 +242,18 @@ int dstr_append_cstr(dstr* dest, const char *src)
     return 1;
 }
 
+int dstr_append_cstrn(dstr* dest, const char *src, size_t n)
+{
+    size_t total = n + dest->sz;
+    if (!can_hold(dest, total + 1)){
+        if (!alloc_more(dest, total + 1))
+            return 0;
+    }
+    strncpy(dest->data+dest->sz, src, n);
+    dest->sz = total;
+    return 1;
+}
+
 int dstr_append_decref(dstr* dest, dstr* src)
 {
     if (dstr_append(dest, src)){
@@ -215,10 +278,12 @@ dstr *dstr_copy(const dstr *copy)
 
 void dstr_clear(dstr *str)
 {
-    while (str->sz){
-        str->sz--;
-        str->data[str->sz] = 0;
+    int i = str->mem;
+    while (i){
+        i--;
+        str->data[i] = 0;
     }
+    str->sz = 0;
 }
 
 int dstr_print(const dstr *src)
@@ -303,10 +368,10 @@ void dstr_list_remove(dstr_list *list, dstr_link_t *link)
     free(link);
 }
 
-int dstr_list_size(const dstr_list *list)
+size_t dstr_list_size(const dstr_list *list)
 {
     dstr_link_t *link;
-    int sz = 0;
+    size_t sz = 0;
     for (link = list->head; link; link = link->next){
         sz++;
     }
@@ -544,14 +609,14 @@ int dstr_vector_is_empty(const dstr_vector *vec)
     return !vec->sz;
 }
 
-int dstr_vector_size(const dstr_vector *vec)
+size_t dstr_vector_size(const dstr_vector *vec)
 {
     return vec->sz;
 }
 
-int dstr_vector_remove(dstr_vector *vec, int pos)
+int dstr_vector_remove(dstr_vector *vec, size_t pos)
 {
-    int x, sz = vec->sz - 1;
+    size_t x, sz = vec->sz - 1;
 
     if (pos == DSTR_VECTOR_END){
         dstr_decref(vec->arr[sz]);
