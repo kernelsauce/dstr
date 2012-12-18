@@ -76,7 +76,7 @@ dstr *dstr_new()
         return 0;
     str->sz = 0;
     str->data = 0;
-    str->grow_r = 2;
+    str->grow_r = DSTR_MEM_EXPAND_RATE;
     str->mem = 0;
     str->ref = 1;
     return str;
@@ -89,7 +89,7 @@ dstr *dstr_with_initial(const char *initial)
     if (!str)
         return 0;
     str->sz = strlen(initial);
-    str->grow_r = 2;
+    str->grow_r = DSTR_MEM_EXPAND_RATE;
     str->mem = (str->sz * sizeof(char)) + sizeof(char) ;
     str->data = strdup(initial);
     if (!str->data)
@@ -105,7 +105,7 @@ dstr *dstr_with_initialn(const char *initial, size_t n)
     if (!str)
         return 0;
     str->sz = n;
-    str->grow_r = 2;
+    str->grow_r = DSTR_MEM_EXPAND_RATE;
     str->data = strndup(initial, n);
     if (!str->data)
         return 0;
@@ -122,7 +122,7 @@ dstr *dstr_with_prealloc(size_t sz)
     if (!str)
         return 0;
     str->sz = 0;
-    str->grow_r = 2;
+    str->grow_r = DSTR_MEM_EXPAND_RATE;
     str->data = malloc(pre_alloc_mem);
     if (!str->data)
         return 0;
@@ -599,7 +599,7 @@ dstr_vector *dstr_vector_new()
     return vec;
 }
 
-dstr_vector *dstr_vector_prealloc(unsigned int elements)
+dstr_vector *dstr_vector_prealloc(size_t elements)
 {
     dstr_vector *vec = malloc(sizeof(dstr_vector));
     if (!vec)
@@ -650,7 +650,7 @@ static int __dstr_vector_can_hold(const dstr_vector *vec, unsigned int elements)
     return 0;
 }
 
-int dstr_vector_insert(dstr_vector *vec, int pos, dstr *str)
+int dstr_vector_insert(dstr_vector *vec, size_t pos, dstr *str)
 {
     int new_sz, move_n, move_ptr;
 
@@ -681,7 +681,7 @@ int dstr_vector_insert(dstr_vector *vec, int pos, dstr *str)
     return 0;
 }
 
-int dstr_vector_insert_decref(dstr_vector *vec, int pos, dstr *str)
+int dstr_vector_insert_decref(dstr_vector *vec, size_t pos, dstr *str)
 {
     int rc = dstr_vector_insert(vec, pos, str);
     if (rc)
