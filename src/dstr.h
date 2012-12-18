@@ -24,8 +24,9 @@
 #define _DSTR_H 1
 #include <stdlib.h>
 
-/* Check boundaries for containers access, slowdown, better to code right.  */
-#define DSTR_MEM_SECURITY 0
+/* Check boundaries for containers access if defined. Slowdown, better to
+   code right.  */
+// #define DSTR_MEM_SECURITY
 
 typedef struct dstr{
     char* data; // Internal pointer.
@@ -252,7 +253,6 @@ size_t dstr_vector_size(const dstr_vector *vec);
 /* Decrement reference count by one. When no more references exists the
  * vector is emptied (and strings decrefed) and free'd.   */
 void dstr_vector_decref(dstr_vector *vec);
-
 /* Increment referece count by one.   */
 void dstr_vector_incref(dstr_vector *vec);
 
