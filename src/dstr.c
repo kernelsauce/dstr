@@ -29,19 +29,19 @@
 
 /****************************** DYNAMIC STRING ********************************/
 
-static int alloc_more(dstr* str, size_t sz)
+static int __dstr_alloc(dstr* str, size_t sz)
 {
     size_t more_mem;
 
     more_mem = (str->mem + (sz * sizeof(char))) * str->grow_r;
-    str->mem = more_mem;
     str->data = realloc(str->data, more_mem);
     if (!str->data)
         return 0;
+    str->mem = more_mem;
     return 1;
 }
 
-static int can_hold(const dstr *str, size_t chars)
+static int __dstr_can_hold(const dstr *str, size_t chars)
 {
     if (!str->data)
         return 0;
@@ -106,10 +106,10 @@ dstr *dstr_with_initialn(const char *initial, size_t n)
         return 0;
     str->sz = n;
     str->grow_r = 2;
-    str->mem = (str->sz * sizeof(char)) + sizeof(char) ;
     str->data = strndup(initial, n);
     if (!str->data)
         return 0;
+    str->mem = (str->sz * sizeof(char)) + sizeof(char);
     str->ref = 1;
     return str;
 }
@@ -138,6 +138,8 @@ int dstr_compact(dstr *str)
     if (str->mem > str->sz){
         alloc = (sizeof(char) * str->sz) + sizeof(char);
         str->data = realloc(str->data, alloc);
+        if (!str->data)
+            return 0;
         str->mem = alloc;
         if (str->data)
             return 1;
@@ -260,14 +262,38 @@ int dstr_starts_with(const dstr *str, const char *starts_with)
             return 0;
     }
     return 1;
+}
 
+int dstr_ends_with(const dstr *str, const char *ends_with)
+{
+    const char *cstr;
+    int cstr_len, ends_len;
+
+    cstr = dstr_to_cstr_const(str);
+    cstr_len = strlen(cstr);
+    ends_len = strlen(ends_with);
+
+    if (ends_len > cstr_len)
+        return 0;
+    while (ends_len){
+        if (cstr[cstr_len] != ends_with[ends_len--]){
+            return 0;
+        }
+        cstr_len--;
+    }
+    return 1;
+}
+
+int dstr_ends_with_dstr(const dstr *str, dstr *ends_with)
+{
+    return dstr_ends_with(str, dstr_to_cstr_const(ends_with));
 }
 
 int dstr_append(dstr* dest, const dstr* src)
 {
-    int total = src->sz + dest->sz;
-    if (!can_hold(dest, total + 1)){
-        if (!alloc_more(dest, total))
+    size_t total = src->sz + dest->sz;
+    if (!__dstr_can_hold(dest, total + 1)){
+        if (!__dstr_alloc(dest, total))
             return 0;
     }
     strcpy(dest->data+dest->sz, src->data);
@@ -277,9 +303,9 @@ int dstr_append(dstr* dest, const dstr* src)
 
 int dstr_append_cstr(dstr* dest, const char *src)
 {
-    int total = strlen(src) + dest->sz;
-    if (!can_hold(dest, total + 1)){
-        if (!alloc_more(dest, total))
+    size_t total = strlen(src) + dest->sz;
+    if (!__dstr_can_hold(dest, total + 1)){
+        if (!__dstr_alloc(dest, total))
             return 0;
     }
     strcpy(dest->data+dest->sz, src);
@@ -290,8 +316,8 @@ int dstr_append_cstr(dstr* dest, const char *src)
 int dstr_append_cstrn(dstr* dest, const char *src, size_t n)
 {
     size_t total = n + dest->sz;
-    if (!can_hold(dest, total + 1)){
-        if (!alloc_more(dest, total + 1))
+    if (!__dstr_can_hold(dest, total + 1)){
+        if (!__dstr_alloc(dest, total + 1))
             return 0;
     }
     strncpy(dest->data+dest->sz, src, n);
@@ -304,9 +330,66 @@ int dstr_append_decref(dstr* dest, dstr* src)
     if (dstr_append(dest, src)){
         dstr_decref(src);
         return 1;
-    } else {
-        return 0;
     }
+    return 0;
+}
+
+int dstr_prepend(dstr* dest, const dstr *src)
+{
+    size_t total = src->sz + dest->sz;
+    if (!__dstr_can_hold(dest, total + 1)){
+        if (!__dstr_alloc(dest, total))
+            return 0;
+    }
+    if (!memmove(dest->data + src->sz, dest->data,
+            (src->sz * sizeof(char)) + sizeof(char)))
+        return 0;
+    if (!memcpy(dest->data, src->data, src->sz))
+        return 0;
+    dest->sz = total;
+    return 1;
+}
+
+int dstr_prepend_decref(dstr* dest, dstr* src)
+{
+    if (dstr_prepend(dest, src)){
+        dstr_decref(src);
+        return 1;
+    }
+    return 0;
+}
+
+int dstr_prepend_cstr(dstr* dest, const char *src)
+{
+    size_t src_len = strlen(src);
+    size_t total = src_len + dest->sz;
+    if (!__dstr_can_hold(dest, total + 1)){
+        if (!__dstr_alloc(dest, total))
+            return 0;
+    }
+    if (!memmove(dest->data + src_len, dest->data,
+            (src_len * sizeof(char)) + sizeof(char)))
+        return 0;
+    if (!memcpy(dest->data, src, src_len))
+        return 0;
+    dest->sz = total;
+    return 1;
+}
+
+int dstr_prepend_cstrn(dstr* dest, const char *src, size_t n)
+{
+    size_t total = n + dest->sz;
+    if (!__dstr_can_hold(dest, total + 1)){
+        if (!__dstr_alloc(dest, total))
+            return 0;
+    }
+    if (!memmove(dest->data + n, dest->data,
+            (n * sizeof(char)) + sizeof(char)))
+        return 0;
+    if (!memcpy(dest->data, src, n))
+        return 0;
+    dest->sz = total;
+    return 1;
 }
 
 dstr *dstr_copy(const dstr *copy)

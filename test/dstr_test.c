@@ -21,6 +21,7 @@
     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
 
 #include <string.h>
+#include <time.h>
 #include <CUnit/CUnit.h>
 #include "CUnit/Basic.h"
 #include "dstr.h"
@@ -126,6 +127,24 @@ void test_dstr_append_cstr()
     dstr_decref(str);
 }
 
+void test_dstr_prepend()
+{
+    dstr *str1 = dstr_with_initial("str1");
+    dstr *str2 = dstr_with_initial("str2");
+    dstr_prepend(str1, str2);
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(str1), "str2str1");
+    dstr_decref(str1);
+    dstr_decref(str2);
+}
+
+void test_dstr_prepend_cstr()
+{
+    dstr *str1 = dstr_with_initial("str1");
+    dstr_prepend_cstr(str1, "str2");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(str1), "str2str1");
+    dstr_decref(str1);
+}
+
 void test_dstr_clear()
 {
     dstr *str = dstr_with_initial("some data");
@@ -181,6 +200,30 @@ void test_dstr_starts_with()
     CU_ASSERT(!dstr_starts_with(no_match, "something"));
     dstr_decref(match);
     dstr_decref(no_match);
+}
+
+void test_dstr_ends_with()
+{
+    dstr *match = dstr_with_initial("something to match");
+    dstr *no_match = dstr_with_initial("match not");
+
+    CU_ASSERT(dstr_ends_with(match, "match"));
+    CU_ASSERT(!dstr_ends_with(no_match, "match"));
+    dstr_decref(match);
+    dstr_decref(no_match);
+}
+
+void test_dstr_ends_with_dstr()
+{
+    dstr *match = dstr_with_initial("something to match");
+    dstr *no_match = dstr_with_initial("match not");
+    dstr *to_match = dstr_with_initial("match");
+
+    CU_ASSERT(dstr_ends_with_dstr(match, to_match));
+    CU_ASSERT(!dstr_ends_with_dstr(no_match, to_match));
+    dstr_decref(match);
+    dstr_decref(no_match);
+    dstr_decref(to_match);
 }
 
 void test_dstr_contains()
@@ -539,9 +582,55 @@ void test_dstr_vector_size()
     dstr_vector_decref(vec);
 }
 
+void test_some_concat()
+{
+    dstr *str = dstr_with_prealloc(1000);
+    clock_t start = clock(), diff;
+    int i;
+
+    for (i = 0; i < 1000000; i++){
+        dstr_append_cstr(str, "concat me onto something...");
+    }
+
+    dstr_decref(str);
+    diff = clock() - start;
+
+    int msec = diff * 1000 / CLOCKS_PER_SEC;
+    printf("time used for 1000000 appends: %d seconds %d milliseconds. ", msec/1000, msec%1000);
+}
+
+void __append_to_str_callback(dstr *src, void *dest)
+{
+    dstr_append(dest, src);
+    if (!dstr_starts_with(src, "word6"))
+        dstr_append_cstr(dest, ",");
+}
+
+void test_diverse_things()
+{
+    dstr_vector *vec1;
+    dstr_list *list = dstr_list_new();
+    dstr *str = dstr_with_initial("word1,word2,word3,word4,word5,word6");
+    dstr *str2 = dstr_new();
+
+    vec1 = dstr_split_to_vector(str, ",");
+    while (!dstr_vector_is_empty(vec1)){
+        dstr_list_add(list, dstr_vector_back(vec1));
+        dstr_vector_pop_back(vec1);
+    }
+
+    dstr_list_traverse_reverse(list, __append_to_str_callback, str2);
+
+    CU_ASSERT(dstr_starts_with_dstr(str, str2));
+    dstr_decref(str);
+    dstr_decref(str2);
+    dstr_vector_decref(vec1);
+    dstr_list_decref(list);
+}
+
 int main()
 {
-   CU_pSuite dstr_suite, dstr_list_suite, dstr_vector_suite;
+   CU_pSuite dstr_suite, dstr_list_suite, dstr_vector_suite, typical;
 
    if (CU_initialize_registry() != CUE_SUCCESS)
       return CU_get_error();
@@ -557,7 +646,12 @@ int main()
       return CU_get_error();
    }
    dstr_vector_suite = CU_add_suite("dstr_vector", 0,0);
-   if (!dstr_list_suite){
+   if (!dstr_vector_suite){
+      CU_cleanup_registry();
+      return CU_get_error();
+   }
+   typical = CU_add_suite("typical usage", 0,0);
+   if (!typical){
       CU_cleanup_registry();
       return CU_get_error();
    }
@@ -577,11 +671,15 @@ int main()
            !CU_add_test(dstr_suite, "dstr_append", test_dstr_append) ||
            !CU_add_test(dstr_suite, "dstr_append_decref", test_dstr_append_decref) ||
            !CU_add_test(dstr_suite, "dstr_append_cstr", test_dstr_append_cstr) ||
+           !CU_add_test(dstr_suite, "dstr_prepend", test_dstr_prepend) ||
+           !CU_add_test(dstr_suite, "dstr_prepend_cstr", test_dstr_prepend_cstr) ||
            !CU_add_test(dstr_suite, "dstr_clear", test_dstr_clear) ||
            !CU_add_test(dstr_suite, "dstr_compact", test_dstr_compact) ||
            !CU_add_test(dstr_suite, "dstr_growth_rate", test_dstr_growth_rate) ||
            !CU_add_test(dstr_suite, "dstr_starts_with_dstr", test_dstr_starts_with_dstr) ||
            !CU_add_test(dstr_suite, "dstr_starts_with", test_dstr_starts_with) ||
+           !CU_add_test(dstr_suite, "dstr_ends_with", test_dstr_ends_with) ||
+           !CU_add_test(dstr_suite, "dstr_ends_with_dstr", test_dstr_ends_with_dstr) ||
            !CU_add_test(dstr_suite, "dstr_contains", test_dstr_contains) ||
            !CU_add_test(dstr_suite, "dstr_contains_dstr", test_dstr_contains_dstr) ||
            !CU_add_test(dstr_suite, "dstr_split_to_vector", test_dstr_split_to_vector) ||
@@ -615,6 +713,13 @@ int main()
            !CU_add_test(dstr_vector_suite, "dstr_vector_size", test_dstr_vector_size) ||
            !CU_add_test(dstr_vector_suite, "dstr_vector_at", test_dstr_vector_at) ||
            !CU_add_test(dstr_vector_suite, "dstr_vector_remove", test_dstr_vector_remove)){
+      CU_cleanup_registry();
+      return CU_get_error();
+   }
+
+
+   if (!CU_add_test(typical, "test_some_concating", test_some_concat) ||
+           !CU_add_test(typical, "test_diverse_things", test_diverse_things)){
       CU_cleanup_registry();
       return CU_get_error();
    }

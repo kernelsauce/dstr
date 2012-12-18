@@ -20,10 +20,10 @@
     OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
 
-#include <stdlib.h>
-
 #ifndef _DSTR_H
 #define _DSTR_H 1
+
+#include <stdlib.h>
 
 typedef struct dstr{
     char* data; ///< Internal pointer.
@@ -125,6 +125,42 @@ int dstr_append(dstr* dest, const dstr* src);
 int dstr_append_decref(dstr* dest, dstr* src);
 
 /**
+ * Prepends a dynamic string to a dynamic string.
+ * @param dest Destination string to prepend to.
+ * @param src Source string to prepend.
+ * @return 0 on failure, 1 on success.
+ * @see dstr_append_decref for a reference stealing implementation.
+ */
+int dstr_prepend(dstr* dest, const dstr* src);
+
+/**
+ * Prepends a dynamic string to a dynamic string.
+ * This function also steals one reference attached to the source string.
+ * @param dest Destination string to prepend to.
+ * @param src Source string to prepend.
+ * @return 0 on failure, 1 on success.
+ * @see dstr_append_decref for a reference stealing implementation.
+ */
+int dstr_prepend_decref(dstr* dest, dstr *src);
+
+/**
+ * Prepends a C string to a dynamic string.
+ * @param dest Destination dynamic string to prepend to.
+ * @param src Source C string to prepend.
+ * @return 0 on failure, 1 on success.
+ */
+int dstr_prepend_cstr(dstr* dest, const char *src);
+
+/**
+ * Prepends a C string, up until n characters, to a dynamic string.
+ * @param dest Destination dynamic string to prepend to.
+ * @param src Source C string to prepend.
+ * @param n Amount of characters to copy.
+ * @return 0 on failure, 1 on success.
+ */
+int dstr_prepend_cstrn(dstr* dest, const char *src, size_t n);
+
+/**
  * Appends a C string to a dynamic string.
  * @param dest Destination string to append to.
  * @param src Source C string to append.
@@ -195,6 +231,22 @@ int dstr_starts_with(const dstr *str, const char *starts_with);
  * @return 0 if not starts with, 1 if starts with.
  */
 int dstr_starts_with_dstr(const dstr *str, const dstr *starts_with);
+
+/**
+ * Check if string ends with.
+ * @param str Dynamic string to match end of.
+ * @param ends_with C string to match with.
+ * @return 0 if not ends with, 1 if ends with.
+ */
+int dstr_ends_with(const dstr *str, const char *ends_with);
+
+/**
+ * Check if string ends with.
+ * @param str Dynamic string to match end of.
+ * @param ends_with Dynamic string to match with.
+ * @return 0 if not ends with, 1 if ends with.
+ */
+int dstr_ends_with_dstr(const dstr *str, dstr *ends_with);
 
 /**
  * Split a dynamic string to a vector.
