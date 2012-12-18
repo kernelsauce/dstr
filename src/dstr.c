@@ -132,6 +132,11 @@ dstr *dstr_with_prealloc(size_t sz)
     return str;
 }
 
+char *dstr_copy_to_cstr(const dstr* str)
+{
+    return strndup(str->data, str->sz + 1);
+}
+
 int dstr_compact(dstr *str)
 {
     int alloc;

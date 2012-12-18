@@ -84,13 +84,23 @@ dstr *dstr_with_initialn(const char *initial, size_t n);
 dstr *dstr_with_prealloc(size_t sz);
 
 /**
- * Returns pointer to C string from given dynamic string.
+ * Returns internal pointer to C string from given dynamic string.
  * @note When the dynamic string is changed the data of the pointer is
  *  also changed, and vice versa.
+ * @note Do not modify returned character array. Doing so will corrupt string
+ *  size and memory allocations.
  * @param str Source dynamic string to return C string from.
  * @return Zero terminated C string from dynamic string.
  */
 const char *dstr_to_cstr_const(const dstr* str);
+
+/**
+ * Copy dynamic string to C string.
+ * @note You must free the returned pointer when no longer in use.
+ * @param str The string to return a copy of.
+ * @return C string from dynamic string contents.
+ */
+char *dstr_copy_to_cstr(const dstr* str);
 
 /**
  * Decreases reference to the dynamic string.

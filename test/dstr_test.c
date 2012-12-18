@@ -96,6 +96,15 @@ void test_incref()
     dstr_decref(str);
 }
 
+void test_dstr_copy_to_cstr()
+{
+    dstr *str = dstr_with_initial("something here");
+    char *cstr = dstr_copy_to_cstr(str);
+    CU_ASSERT_STRING_EQUAL(cstr, dstr_to_cstr_const(str));
+    dstr_decref(str);
+    free(cstr);
+}
+
 void test_dstr_append()
 {
     dstr *str = dstr_with_initial("concat me");
@@ -668,6 +677,7 @@ int main()
            !CU_add_test(dstr_suite, "dstr_prealloc", new_dstr_prealloc) ||
            !CU_add_test(dstr_suite, "dstr_decref", test_decref) ||
            !CU_add_test(dstr_suite, "dstr_incref", test_incref) ||
+           !CU_add_test(dstr_suite, "dstr_dstr_copy_to_cstr", test_dstr_copy_to_cstr) ||
            !CU_add_test(dstr_suite, "dstr_append", test_dstr_append) ||
            !CU_add_test(dstr_suite, "dstr_append_decref", test_dstr_append_decref) ||
            !CU_add_test(dstr_suite, "dstr_append_cstr", test_dstr_append_cstr) ||
