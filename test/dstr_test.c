@@ -220,6 +220,19 @@ void test_dstr_split_to_vector()
     dstr_vector_decref(vec);
 }
 
+void test_dstr_split_to_list()
+{
+    dstr *str = dstr_with_initial("word1,word2,word3,word4,word5,word6");
+    dstr_list *list = dstr_split_to_list(str, ",");
+    dstr *combined_again = dstr_list_to_dstr(",", list);
+
+    CU_ASSERT_PTR_NOT_NULL_FATAL(combined_again);
+    CU_ASSERT(dstr_starts_with_dstr(str, combined_again));
+
+    dstr_decref(str);
+    dstr_decref(combined_again);
+    dstr_list_decref(list);
+}
 
 /**************************** DYNAMIC STRING LIST  ****************************/
 
@@ -572,6 +585,7 @@ int main()
            !CU_add_test(dstr_suite, "dstr_contains", test_dstr_contains) ||
            !CU_add_test(dstr_suite, "dstr_contains_dstr", test_dstr_contains_dstr) ||
            !CU_add_test(dstr_suite, "dstr_split_to_vector", test_dstr_split_to_vector) ||
+           !CU_add_test(dstr_suite, "dstr_split_to_list", test_dstr_split_to_list) ||
            !CU_add_test(dstr_suite, "dstr_dstr_to_cstr", test_dstr_to_cstr)){
       CU_cleanup_registry();
       return CU_get_error();

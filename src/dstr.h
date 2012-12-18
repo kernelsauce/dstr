@@ -206,6 +206,15 @@ int dstr_starts_with_dstr(const dstr *str, const dstr *starts_with);
 dstr_vector *dstr_split_to_vector(const dstr *str, const char *sep);
 
 /**
+ * Split a dynamic string to a list.
+ * @param str String to split.
+ * @param sep Character to split on.
+ * @return List with string fragments. If none were found a empty list
+ *  is returned.
+ */
+dstr_list *dstr_split_to_list(const dstr *str, const char *sep);
+
+/**
  * Modify the growth rate of memory when doing new allocations.
  * Higher rate means more memory potentially lost, but string concatination speeds up.
  * Lower rate means the opposite.

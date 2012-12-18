@@ -184,19 +184,64 @@ dstr_vector *dstr_split_to_vector(const dstr *str, const char *sep)
 
     vec = dstr_vector_prealloc(count);
     cstr = dstr_to_cstr_const(str);
-    occ_end = strstr(occ_start, sep);
-    while (occ_end){
+    for (;;){
         occ_end = strstr(occ_start, sep);
-        occ_len = occ_end - occ_start;
-        dstr_ptr = dstr_with_initialn(occ_start, occ_len);
-        if (!dstr_ptr)
-            return 0;
-        if (!dstr_vector_push_back_decref(vec, dstr_ptr))
-            return 0;
-        occ_start = occ_end + 1;
+        if (!occ_end){
+            occ_len = strlen(occ_start);
+            dstr_ptr = dstr_with_initialn(occ_start, occ_len);
+            if (!dstr_ptr)
+                return 0;
+            if (!dstr_vector_push_back_decref(vec, dstr_ptr))
+                return 0;
+            return vec;
+        } else {
+            occ_len = occ_end - occ_start;
+            dstr_ptr = dstr_with_initialn(occ_start, occ_len);
+            if (!dstr_ptr)
+                return 0;
+            if (!dstr_vector_push_back_decref(vec, dstr_ptr))
+                return 0;
+            occ_start = occ_end + 1;
+        }
     }
 
     return vec;
+}
+
+dstr_list *dstr_split_to_list(const dstr *str, const char *sep)
+{
+    dstr_list *list;
+    dstr *dstr_ptr;
+    size_t occ_len;
+    const char *cstr, *occ_start, *occ_end;
+
+    cstr = dstr_to_cstr_const(str);
+    occ_start = cstr;
+
+    list = dstr_list_new();
+    cstr = dstr_to_cstr_const(str);
+    for (;;){
+        occ_end = strstr(occ_start, sep);
+        if (!occ_end){
+            occ_len = strlen(occ_start);
+            dstr_ptr = dstr_with_initialn(occ_start, occ_len);
+            if (!dstr_ptr)
+                return 0;
+            if (!dstr_list_add_decref(list, dstr_ptr))
+                return 0;
+            return list;
+        } else {
+            occ_len = occ_end - occ_start;
+            dstr_ptr = dstr_with_initialn(occ_start, occ_len);
+            if (!dstr_ptr)
+                return 0;
+            if (!dstr_list_add_decref(list, dstr_ptr))
+                return 0;
+            occ_start = occ_end + 1;
+        }
+    }
+
+    return list;
 }
 
 int dstr_starts_with(const dstr *str, const char *starts_with)
