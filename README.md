@@ -69,7 +69,7 @@ With DST_MEM_CLEAR:
 
   Test: test_some_concating ... time used for 1000000 appends: 0 seconds 660 milliseconds. passed
 
-Containers:
+Vectors:
 
 ```C
     dstr *str = dstr_with_initial("append me");
@@ -88,14 +88,14 @@ Without DSTR_MEM_SECURITY  (boundary protection for operations get/set/remove op
   - Test: test_vector_append_speed ... time used for 1000000 push_back to vector: 0 seconds 60 milliseconds. passed
   - Test: test_vector_append_speed_no_prealloc ... time used for 1000000 push_back to vector: 0 seconds 70 milliseconds. passed
   - Test: test_vector_append_front_speed ... time used for 20000 push_front to vector: 2 seconds 140 milliseconds. passed
-  - Test: test_vector_list_speed ... time used for 1000000 insertion to list: 0 seconds 110 milliseconds. passed
 
 With DSTR_MEM_SECURITY defined:
   - Test: test_vector_append_speed ... time used for 1000000 push_back to vector: 0 seconds 70 milliseconds. passed
   - Test: test_vector_append_speed_no_prealloc ... time used for 1000000 push_back to vector: 0 seconds 70 milliseconds. passed
   - Test: test_vector_append_front_speed ... time used for 20000 push_front to vector: 2 seconds 140 milliseconds. passed
-  - Test: test_vector_list_speed ... time used for 1000000 insertion to list: 0 seconds 120 milliseconds. passed
 
+Lists:
+  - Test: test_list_speed ... time used for 1000000 insertion to list: 0 seconds 110 milliseconds. passed
 
 License
 -------
