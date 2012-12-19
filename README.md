@@ -9,6 +9,7 @@ Author: John Abrahamsen <JhnAbrhmsn@gmail.com>.
 
 <b>Its simple:</b>
 	
+```C
 	dstr *str = dstr_with_initial("concat me");
 	dstr *str2 = dstr_with_initial(" to me");
 	
@@ -16,6 +17,7 @@ Author: John Abrahamsen <JhnAbrhmsn@gmail.com>.
 	printf("%s", dstr_from_dstr_to_ctr(str));
 	dstr_decref(str);
 	dstr_decref(str2);
+```
 
 Containers
 ----------
