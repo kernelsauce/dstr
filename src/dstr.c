@@ -27,34 +27,76 @@
 
 #include "dstr.h"
 
-/****************************** DYNAMIC STRING ********************************/
+/*                            DYNAMIC STRING                                 */
 
+/* Memset that will not be optimized away by compilers.   */
+static void __dstr_safe_memset(void *ptr, int c, size_t sz)
+{
+    volatile unsigned char *p = ptr;
+
+    for (; sz > 0; sz--)
+        *p++ = (unsigned char)c;
+}
+
+/* Realloc that will zero byte the old allocated space.    */
+static void *__dstr_safe_realloc(void *ptr, size_t new_sz, size_t old_sz)
+{
+    void * tmp_ptr;
+
+    tmp_ptr = malloc(new_sz);
+    if (!tmp_ptr)
+        return 0;
+    if (ptr){
+        memcpy(tmp_ptr, ptr, old_sz);
+        __dstr_safe_memset(ptr, 0, old_sz);
+        free(ptr);
+    }
+    return tmp_ptr;
+}
+
+/* Allocate memory for dstr. Uses realloc if not DSTR_MEM_CLEAR is defined,
+   else it uses __dstr_safe_realloc.   */
 static int __dstr_alloc(dstr* str, size_t sz)
 {
     size_t more_mem;
+    void *tmp_ptr;
 
     more_mem = (str->mem + (sz * sizeof(char))) * str->grow_r;
-    str->data = realloc(str->data, more_mem);
-    if (!str->data)
+#ifdef DSTR_MEM_CLEAR
+    tmp_ptr = __dstr_safe_realloc(str->data, more_mem, str->mem);
+#else
+    tmp_ptr = realloc(str->data, more_mem);
+#endif
+    if (tmp_ptr)
+        str->data = tmp_ptr;
+    else
         return 0;
     str->mem = more_mem;
     return 1;
 }
 
-static int __dstr_can_hold(const dstr *str, size_t chars)
+/* Check if a dstr can hold n bytes.   */
+static int __dstr_can_hold(const dstr *str, size_t sz)
 {
     if (!str->data)
         return 0;
     else
-        return (chars < str->mem);
+        return (sz < str->mem);
 }
 
 void dstr_decref(dstr *str)
 {
     str->ref--;
     if (!str->ref){
+#ifdef DSTR_MEM_CLEAR
+        __dstr_safe_memset(str->data, 0, str->mem);
+        free(str->data);
+        __dstr_safe_memset(str, 0, sizeof(dstr));
+        free(str);
+#else
         free(str->data);
         free(str);
+#endif
     }
 }
 
@@ -429,7 +471,8 @@ void dstr_growth_rate(dstr *dest, int rate)
     dest->grow_r = rate;
 }
 
-/**************************** DYNAMIC STRING LIST  ****************************/
+
+/*                          DYNAMIC STRING LIST                             */
 
 dstr_list *dstr_list_new()
 {
@@ -585,7 +628,9 @@ dstr *dstr_list_to_dstr(const char *sep, dstr_list *list)
     return str;
 }
 
-/************************* DYNAMIC VECTOR LIST  *******************************/
+
+
+/*                          DYNAMIC STRING VECTOR                           */
 
 dstr_vector *dstr_vector_new()
 {
@@ -635,11 +680,11 @@ void dstr_vector_incref(dstr_vector *vec)
 
 static int __dstr_vector_alloc(dstr_vector *vec, unsigned int elements)
 {
-    int alloc = elements * sizeof(dstr *);
+    int alloc = elements * sizeof(dstr *) * DSTR_VECTOR_MEM_EXPAND_RATE;
     vec->arr = (dstr **)realloc(vec->arr, alloc);
     if (!vec->arr)
         return 0;
-    vec->space = elements;
+    vec->space = elements * DSTR_VECTOR_MEM_EXPAND_RATE;
     return 1;
 }
 

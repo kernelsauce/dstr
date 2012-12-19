@@ -61,7 +61,8 @@ typedef struct dstr_vector{
    and 1 for success. Booleans are not used as to support C89 compilers.
    Functions returning pointers will return 0  on memory allocation
    failures.   */
-#define DSTR_MEM_EXPAND_RATE 2
+#define DSTR_MEM_EXPAND_RATE 2 // How much to grow per allocation.
+//#define DSTR_MEM_CLEAR  // When free'ing or reallocing clear contents.
 
 /* Create a new dynamic string object.   */
 dstr *dstr_new();
@@ -205,6 +206,7 @@ void dstr_list_incref (dstr_list *list);
    empty vector will give undefined behaviour.    */
 #define DSTR_VECTOR_END 0xffffff // End of vector position magix.
 #define DSTR_VECTOR_BEGIN  0x0 // Start of vector position magix.
+#define DSTR_VECTOR_MEM_EXPAND_RATE 3 // How much to grow per allocation.
 
 /* Create a new vector with no initial size. To avoid thrashing of reallocations
    it is advised to prealloc large vectors with dstr_vector_prealloc.   */

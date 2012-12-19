@@ -637,6 +637,78 @@ void test_diverse_things()
     dstr_list_decref(list);
 }
 
+void test_vector_append_speed()
+{
+    dstr *str = dstr_with_initial("append me");
+    dstr_vector *vec = dstr_vector_prealloc(1000000);
+    clock_t start = clock(), diff;
+    int i;
+
+    for (i = 0; i < 1000000; i++){
+        dstr_vector_push_back(vec, str);
+    }
+
+    dstr_vector_decref(vec);
+    diff = clock() - start;
+    dstr_decref(str);
+    int msec = diff * 1000 / CLOCKS_PER_SEC;
+    printf("time used for 1000000 push_back to vector: %d seconds %d milliseconds. ", msec/1000, msec%1000);
+}
+
+void test_vector_append_speed_no_prealloc()
+{
+    dstr *str = dstr_with_initial("append me");
+    dstr_vector *vec = dstr_vector_new();
+    clock_t start = clock(), diff;
+    int i;
+
+    for (i = 0; i < 1000000; i++){
+        dstr_vector_push_back(vec, str);
+    }
+
+    dstr_vector_decref(vec);
+    diff = clock() - start;
+    dstr_decref(str);
+    int msec = diff * 1000 / CLOCKS_PER_SEC;
+    printf("time used for 1000000 push_back to vector: %d seconds %d milliseconds. ", msec/1000, msec%1000);
+}
+
+void test_vector_append_front_speed()
+{
+    dstr *str = dstr_with_initial("append me");
+    dstr_vector *vec = dstr_vector_prealloc(20000);
+    clock_t start = clock(), diff;
+    int i;
+
+    for (i = 0; i < 20000; i++){
+        dstr_vector_push_front(vec, str);
+    }
+
+    dstr_vector_decref(vec);
+    diff = clock() - start;
+    dstr_decref(str);
+    int msec = diff * 1000 / CLOCKS_PER_SEC;
+    printf("time used for 20000 push_front to vector: %d seconds %d milliseconds. ", msec/1000, msec%1000);
+}
+
+void test_list_append_speed()
+{
+    dstr *str = dstr_with_initial("append me");
+    dstr_list *list = dstr_list_new();
+    clock_t start = clock(), diff;
+    int i;
+
+    for (i = 0; i < 1000000; i++){
+        dstr_list_add(list, str);
+    }
+
+    dstr_list_decref(list);
+    diff = clock() - start;
+    dstr_decref(str);
+    int msec = diff * 1000 / CLOCKS_PER_SEC;
+    printf("time used for 1000000 insertion to list: %d seconds %d milliseconds. ", msec/1000, msec%1000);
+}
+
 int main()
 {
    CU_pSuite dstr_suite, dstr_list_suite, dstr_vector_suite, typical;
@@ -729,6 +801,10 @@ int main()
 
 
    if (!CU_add_test(typical, "test_some_concating", test_some_concat) ||
+           !CU_add_test(typical, "test_vector_append_speed", test_vector_append_speed) ||
+           !CU_add_test(typical, "test_vector_append_speed_no_prealloc", test_vector_append_speed_no_prealloc) ||
+           !CU_add_test(typical, "test_vector_append_front_speed", test_vector_append_front_speed) ||
+           !CU_add_test(typical, "test_vector_list_speed", test_list_append_speed) ||
            !CU_add_test(typical, "test_diverse_things", test_diverse_things)){
       CU_cleanup_registry();
       return CU_get_error();
