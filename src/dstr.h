@@ -26,7 +26,7 @@
 
 /* Check boundaries for containers access if defined. Slowdown, better to
    code right.  */
-// #define DSTR_MEM_SECURITY
+#define DSTR_MEM_SECURITY
 
 typedef struct dstr{
     char* data; // Internal pointer.

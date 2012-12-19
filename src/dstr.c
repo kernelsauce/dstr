@@ -29,6 +29,7 @@
 
 /*                            DYNAMIC STRING                                 */
 
+#ifdef DSTR_MEM_CLEAR
 /* Memset that will not be optimized away by compilers.   */
 static void __dstr_safe_memset(void *ptr, int c, size_t sz)
 {
@@ -53,6 +54,7 @@ static void *__dstr_safe_realloc(void *ptr, size_t new_sz, size_t old_sz)
     }
     return tmp_ptr;
 }
+#endif
 
 /* Allocate memory for dstr. Uses realloc if not DSTR_MEM_CLEAR is defined,
    else it uses __dstr_safe_realloc.   */
@@ -182,10 +184,18 @@ char *dstr_copy_to_cstr(const dstr* str)
 int dstr_compact(dstr *str)
 {
     int alloc;
+    void *tmp_ptr;
+
     if (str->mem > str->sz){
         alloc = (sizeof(char) * str->sz) + sizeof(char);
-        str->data = realloc(str->data, alloc);
-        if (!str->data)
+#ifdef DSTR_MEM_CLEAR
+        tmp_ptr = __dstr_safe_realloc(str->data, alloc, str->mem);
+#else
+        tmp_ptr = realloc(str->data, alloc);
+#endif
+        if (tmp_ptr)
+            str->data = tmp_ptr;
+        else
             return 0;
         str->mem = alloc;
         if (str->data)

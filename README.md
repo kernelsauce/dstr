@@ -38,6 +38,37 @@ Implementations of both linked lists, dstr_list, and vectors, dstr_vector, are p
 No more memory management is needed. dstr library provides functions to containers
 that will either decrement reference or not, depending on usage.
 	
+Performance
+-----------
+
+All benchmarks are done on Ubuntu 11.04 and Lenovo W510.
+
+Strings:
+
+Without DST_MEM_CLEAR defined (zero bytes previous used string buffers before
+freeing):
+
+  Test: test_some_concating ... time used for 1000000 appends: 0 seconds 50 milliseconds. passed
+
+With DST_MEM_CLEAR:
+
+  Test: test_some_concating ... time used for 1000000 appends: 0 seconds 660 milliseconds. passed
+
+Containers:
+
+Without DSTR_MEM_SECURITY  (boundary protection for operations get/set/remove operations):
+  - Test: test_vector_append_speed ... time used for 1000000 push_back to vector: 0 seconds 60 milliseconds. passed
+  - Test: test_vector_append_speed_no_prealloc ... time used for 1000000 push_back to vector: 0 seconds 70 milliseconds. passed
+  - Test: test_vector_append_front_speed ... time used for 20000 push_front to vector: 2 seconds 140 milliseconds. passed
+  - Test: test_vector_list_speed ... time used for 1000000 insertion to list: 0 seconds 110 milliseconds. passed
+
+With DSTR_MEM_SECURITY defined:
+  - Test: test_vector_append_speed ... time used for 1000000 push_back to vector: 0 seconds 70 milliseconds. passed
+  - Test: test_vector_append_speed_no_prealloc ... time used for 1000000 push_back to vector: 0 seconds 70 milliseconds. passed
+  - Test: test_vector_append_front_speed ... time used for 20000 push_front to vector: 2 seconds 140 milliseconds. passed
+  - Test: test_vector_list_speed ... time used for 1000000 insertion to list: 0 seconds 120 milliseconds. passed
+
+
 License
 -------
 
