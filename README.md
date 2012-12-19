@@ -24,6 +24,7 @@ Implementations of both linked lists, dstr_list, and vectors, dstr_vector, are p
 
 <b>It's also simple:</b>
 	
+'''C
 	dstr_vector *vector = dstr_vector_new();
 	dstr_vector_push_back_decref(vector, dstr_with_initial("First string"));
 	dstr_vector_push_back_decref(vector, dstr_with_initial("Second string"));
@@ -34,6 +35,7 @@ Implementations of both linked lists, dstr_list, and vectors, dstr_vector, are p
 	}
 	
 	dstr_vector_decref(vector);
+'''
 	
 No more memory management is needed. dstr library provides functions to containers
 that will either decrement reference or not, depending on usage.
