@@ -1,9 +1,8 @@
 CC=gcc
 AR=ar
-CFLAGS=-Wall -O3 -fPIC 
+CFLAGS=-Wall -O3 -fPIC -I./src
 LDFLAGS=
-OBJECTS=dstr.o dstr_test.o
-TESTS=
+OBJECTS=dstr.o
 LIBRARY=libdstr
 LIBRARY_A=$(LIBRARY).a
 LIBRARY_SO=$(LIBRARY).so
@@ -18,17 +17,17 @@ $(LIBRARY_A): $(OBJECTS)
 
 $(LIBRARY_SO): $(OBJECTS)
 	$(CC) -shared -Wl,-soname,$@.1 -o $@ $(OBJECTS)
-
-$(TEST): $(TESTS)
-	$(CC) -L/usr/lib -lcunit -ldstr -o $@ $(TESTS)
 	
 static: $(LIBRARY_A)
 shared: $(LIBRARY_SO)
-test: $(TEST)
-
-all:: static shared test
+install: $(LIBRARY_SO)
+	install libdstr.so /usr/lib/libdstr.so.1
+test: $(LIBRARY_SO) install
+	gcc -L. -ldstr -lcunit -I./src ./test/dstr_test.c -o dstr_test
+	./dstr_test
 
 clean:
 	rm -rf *.so
 	rm -rf *.a
 	rm -rf *.o
+	rm -rf dstr_test
