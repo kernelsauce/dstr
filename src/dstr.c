@@ -710,7 +710,7 @@ int dstr_vector_insert(dstr_vector *vec, size_t pos, dstr *str)
 {
     int new_sz = vec->sz + 1, move_n, move_ptr;
 #ifdef DSTR_MEM_SECURITY
-    if (vec->sz < pos && pos != DSTR_VECTOR_END)
+    if (pos != DSTR_VECTOR_END && vec->sz - 1 < pos)
         return 0;
 #endif
 
@@ -780,20 +780,26 @@ void dstr_vector_pop_front(dstr_vector *vec)
 
 dstr *dstr_vector_back(dstr_vector *vec)
 {
-    dstr *str = vec->arr[vec->sz - 1];
-    return str;
+#ifdef DSTR_MEM_SECURITY
+    if (!vec->sz)
+        return 0;
+#endif
+    return vec->arr[vec->sz - 1];
 }
 
 dstr *dstr_vector_front(dstr_vector *vec)
 {
-    dstr *str = vec->arr[DSTR_VECTOR_BEGIN];
-    return str;
+#ifdef DSTR_MEM_SECURITY
+    if (!vec->sz)
+        return 0;
+#endif
+    return vec->arr[DSTR_VECTOR_BEGIN];
 }
 
-dstr *dstr_vector_at(dstr_vector *vec, int pos)
+dstr *dstr_vector_at(dstr_vector *vec, size_t pos)
 {
 #ifdef DSTR_MEM_SECURITY
-    if (vec->sz - 1 < pos && pos != DSTR_VECTOR_END)
+    if (!vec->sz || (pos != DSTR_VECTOR_END && vec->sz - 1 < pos))
         return 0;
 #endif
     return vec->arr[pos];
@@ -813,7 +819,7 @@ int dstr_vector_remove(dstr_vector *vec, size_t pos)
 {
     size_t x, sz = vec->sz - 1;
 #ifdef DSTR_MEM_SECURITY
-    if (vec->sz - 1 < pos && pos != DSTR_VECTOR_END)
+    if (!vec->sz || (pos != DSTR_VECTOR_END && vec->sz - 1 < pos))
         return 0;
 #endif
 

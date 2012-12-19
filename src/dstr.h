@@ -22,13 +22,14 @@
 
 #ifndef _DSTR_H
 #define _DSTR_H 1
+#include <stdlib.h>
 #define DSTR_MAJOR_VERSION 1
 #define DSTR_MINOR_VERSION 0
 #define DSTR_VERSION "1.0"
 
 /* Check boundaries for containers access if defined. Slowdown, better to
    code right.  */
-#define DSTR_MEM_SECURITY
+//#define DSTR_MEM_SECURITY
 
 typedef struct dstr{
     char* data; // Internal pointer.
@@ -249,7 +250,7 @@ dstr *dstr_vector_back(dstr_vector *vec);
 /* Return item from front of vector.   */
 dstr *dstr_vector_front(dstr_vector *vec);
 /* Get string from position.   */
-dstr *dstr_vector_at(dstr_vector *vec, int pos);
+dstr *dstr_vector_at(dstr_vector *vec, size_t pos);
 
 /* Check if a vector is empty or not.   */
 int dstr_vector_is_empty(const dstr_vector *vec);

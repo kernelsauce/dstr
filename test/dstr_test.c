@@ -574,6 +574,26 @@ void test_dstr_vector_at()
     dstr_vector_decref(vec);
 }
 
+void test_dstr_vector_bounds_prot()
+{
+    dstr_vector *vec = dstr_vector_new();
+    dstr *str = dstr_vector_at(vec, 100);
+    str = dstr_vector_at(vec, 100);
+    CU_ASSERT_PTR_NULL(str);
+    str = dstr_vector_at(vec, 1);
+    CU_ASSERT_PTR_NULL(str);
+    str = dstr_vector_at(vec, 0);
+    CU_ASSERT_PTR_NULL(str);
+    str = dstr_vector_at(vec, 4);
+    CU_ASSERT_PTR_NULL(str);
+    str = dstr_vector_at(vec, 234829);
+    CU_ASSERT_PTR_NULL(str);
+    str = dstr_vector_at(vec, -100);
+    CU_ASSERT_PTR_NULL(str);
+    dstr_vector_decref(vec);
+}
+
+
 void test_dstr_vector_is_empty()
 {
     dstr_vector *vec = dstr_vector_new();
@@ -802,6 +822,9 @@ int main()
            !CU_add_test(dstr_vector_suite, "dstr_vector_front", test_dstr_vector_front) ||
            !CU_add_test(dstr_vector_suite, "dstr_vector_is_empty", test_dstr_vector_is_empty) ||
            !CU_add_test(dstr_vector_suite, "dstr_vector_size", test_dstr_vector_size) ||
+#ifdef DSTR_MEM_SECURITY
+           !CU_add_test(dstr_vector_suite, "dstr_vector_out_of_bounds", test_dstr_vector_bounds_prot) ||
+#endif
            !CU_add_test(dstr_vector_suite, "dstr_vector_at", test_dstr_vector_at) ||
            !CU_add_test(dstr_vector_suite, "dstr_vector_remove", test_dstr_vector_remove)){
       CU_cleanup_registry();

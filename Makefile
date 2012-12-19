@@ -1,6 +1,6 @@
 CC=gcc
 AR=ar
-CFLAGS=-Wall -O3 -fPIC -I./src
+CFLAGS=-DDSTR_MEM_SECURITY -DDSTR_MEM_CLEAR -Wall -O3 -fPIC -I./src
 LDFLAGS=
 OBJECTS=dstr.o
 LIBRARY=libdstr
@@ -21,9 +21,9 @@ $(LIBRARY_SO): $(OBJECTS)
 static: $(LIBRARY_A)
 shared: $(LIBRARY_SO)
 install: $(LIBRARY_SO)
-	install libdstr.so /usr/lib/libdstr.so.1
+	sudo install libdstr.so /usr/lib/libdstr.so.1
 test: $(LIBRARY_SO) install
-	gcc -L. -ldstr -lcunit -I./src ./test/dstr_test.c -o dstr_test
+	gcc $(CFLAGS) -L. -ldstr -lcunit ./test/dstr_test.c -o dstr_test
 	./dstr_test
 
 clean:
