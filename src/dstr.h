@@ -62,7 +62,7 @@ typedef struct dstr_vector{
    Functions returning pointers will return 0  on memory allocation
    failures.   */
 #define DSTR_MEM_EXPAND_RATE 2 // How much to grow per allocation.
-#define DSTR_MEM_CLEAR  // When free'ing or reallocing clear contents.
+//#define DSTR_MEM_CLEAR  // When free'ing or reallocing clear contents.
 
 /* Create a new dynamic string object.   */
 dstr *dstr_new();
