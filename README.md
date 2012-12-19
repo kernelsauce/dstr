@@ -14,7 +14,7 @@ Author: John Abrahamsen <JhnAbrhmsn@gmail.com>.
 	dstr *str2 = dstr_with_initial(" to me");
 	
 	dstr_append(str, str2);
-	printf("%s", dstr_from_dstr_to_ctr(str));
+        printf("%s", dstr_from_dstr_to_cstr(str));
 	dstr_decref(str);
 	dstr_decref(str2);
 ```
@@ -39,7 +39,7 @@ Implementations of both linked lists, dstr_list, and vectors, dstr_vector, are p
 	dstr_vector_decref(vector);
 ```
 	
-No more memory management is needed. dstr library provides functions to containers
+No more memory management is needed. dstr library provides functions for containers
 that will either decrement reference or not, depending on usage.
 	
 Performance
@@ -48,6 +48,17 @@ Performance
 All benchmarks are done on Ubuntu 11.04 and Lenovo W510.
 
 Strings:
+
+```C
+    dstr *str = dstr_new();
+    int i;
+
+    for (i = 0; i < 1000000; i++){
+        dstr_append_cstr(str, "concat me onto something...");
+    }
+
+    dstr_decref(str);
+```
 
 Without DST_MEM_CLEAR defined (zero bytes previous used string buffers before
 freeing):
@@ -59,6 +70,19 @@ With DST_MEM_CLEAR:
   Test: test_some_concating ... time used for 1000000 appends: 0 seconds 660 milliseconds. passed
 
 Containers:
+
+```C
+    dstr *str = dstr_with_initial("append me");
+    dstr_vector *vec = dstr_vector_new();
+    int i;
+
+    for (i = 0; i < 1000000; i++){
+        dstr_vector_push_back(vec, str);
+    }
+
+    dstr_vector_decref(vec);
+    dstr_decref(str);
+```
 
 Without DSTR_MEM_SECURITY  (boundary protection for operations get/set/remove operations):
   - Test: test_vector_append_speed ... time used for 1000000 push_back to vector: 0 seconds 60 milliseconds. passed
