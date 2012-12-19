@@ -21,8 +21,8 @@
     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
 
 #include <stdio.h>
+#include <stdarg.h>
 #include <string.h>
-#include <stdlib.h>
 #include <malloc.h>
 
 #include "dstr.h"
@@ -100,11 +100,6 @@ void dstr_decref(dstr *str)
         free(str);
 #endif
     }
-}
-
-void dstr_incref(dstr *str)
-{
-    str->ref++;
 }
 
 const char *dstr_to_cstr_const(const dstr* str)
@@ -382,6 +377,22 @@ int dstr_append_cstrn(dstr* dest, const char *src, size_t n)
     return 1;
 }
 
+int dstr_sprintf(dstr *str, const char *fmt, ...)
+{
+    char *tmp;
+    int rc;
+
+    va_list ap;
+    va_start(ap, fmt);
+    vasprintf(&tmp, fmt, ap);
+    va_end(ap);
+    if (!tmp)
+        return 0;
+    rc = dstr_append_cstr(str, tmp);
+    free(tmp);
+    return rc;
+}
+
 int dstr_append_decref(dstr* dest, dstr* src)
 {
     if (dstr_append(dest, src)){
@@ -613,11 +624,6 @@ void dstr_list_decref (dstr_list *list)
     }
 }
 
-void dstr_list_incref (dstr_list *list)
-{
-    list->ref++;
-}
-
 dstr *dstr_list_to_dstr(const char *sep, dstr_list *list)
 {
     dstr *str = dstr_new();
@@ -681,11 +687,6 @@ void dstr_vector_decref(dstr_vector *vec)
         free(vec->arr);
         free(vec);
     }
-}
-
-void dstr_vector_incref(dstr_vector *vec)
-{
-    vec->ref++;
 }
 
 static int __dstr_vector_alloc(dstr_vector *vec, unsigned int elements)

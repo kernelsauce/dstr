@@ -136,6 +136,14 @@ void test_dstr_append_cstr()
     dstr_decref(str);
 }
 
+void test_dstr_sprintf()
+{
+    dstr *str = dstr_with_initial("I am this old: ");
+    dstr_sprintf(str, "%d and in 2 years I am: %d", 30, 32);
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(str), "I am this old: 30 and in 2 years I am: 32");
+    dstr_decref(str);
+}
+
 void test_dstr_prepend()
 {
     dstr *str1 = dstr_with_initial("str1");
@@ -753,6 +761,7 @@ int main()
            !CU_add_test(dstr_suite, "dstr_append", test_dstr_append) ||
            !CU_add_test(dstr_suite, "dstr_append_decref", test_dstr_append_decref) ||
            !CU_add_test(dstr_suite, "dstr_append_cstr", test_dstr_append_cstr) ||
+           !CU_add_test(dstr_suite, "dstr_sprintf", test_dstr_sprintf) ||
            !CU_add_test(dstr_suite, "dstr_prepend", test_dstr_prepend) ||
            !CU_add_test(dstr_suite, "dstr_prepend_cstr", test_dstr_prepend_cstr) ||
            !CU_add_test(dstr_suite, "dstr_clear", test_dstr_clear) ||

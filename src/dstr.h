@@ -22,7 +22,9 @@
 
 #ifndef _DSTR_H
 #define _DSTR_H 1
-#include <stdlib.h>
+#define DSTR_MAJOR_VERSION 1
+#define DSTR_MINOR_VERSION 0
+#define DSTR_VERSION "1.0"
 
 /* Check boundaries for containers access if defined. Slowdown, better to
    code right.  */
@@ -55,6 +57,7 @@ typedef struct dstr_vector{
     unsigned int ref;
 } dstr_vector;
 
+dstr *dstr_version();
 
 /*                       DYNAMIC STRING PUBLIC API                         */
 /* Note: All functions that returns a integer will return 0 for failure
@@ -88,7 +91,7 @@ char *dstr_copy_to_cstr(const dstr* str);
    If no more references exists, the string is free'd.   */
 void dstr_decref(dstr *str);
 /* Increases reference to the string by one.   */
-void dstr_incref(dstr *str);
+#define dstr_incref(str) (str->ref++)
 
 /* Appends a dynamic string to a dynamic string. See dstr_append_decref for
    a reference stealing implementation   */
@@ -109,6 +112,8 @@ int dstr_prepend_cstrn(dstr* dest, const char *src, size_t n);
 int dstr_append_cstr(dstr* dest, const char *src);
 /* Appends a C string up until n characters to a dynamic string.   */
 int dstr_append_cstrn(dstr* dest, const char *src, size_t n);
+/* Append string printf style.   */
+int dstr_sprintf(dstr *str, const char *fmt, ...);
 
 /* Creates a copy of a dynamic string object, with one reference.   */
 dstr *dstr_copy(const dstr *copy);
@@ -197,8 +202,7 @@ dstr *dstr_list_to_dstr(const char *sep, dstr_list *list);
 /* Decrement one reference from string list.   */
 void dstr_list_decref (dstr_list *list);
 /* Add one reference to the string list.   */
-void dstr_list_incref (dstr_list *list);
-
+#define dstr_list_incref(list) (list->ref++)
 
 /*                    DYNAMIC STRING VECTOR PUBLIC API                      */
 /* Note: There is no safety that prevents out of boundary positions to be
@@ -256,6 +260,6 @@ size_t dstr_vector_size(const dstr_vector *vec);
  * vector is emptied (and strings decrefed) and free'd.   */
 void dstr_vector_decref(dstr_vector *vec);
 /* Increment referece count by one.   */
-void dstr_vector_incref(dstr_vector *vec);
+#define dstr_vector_incref(vec) (vec->ref++)
 
 #endif /* dstr.h */
