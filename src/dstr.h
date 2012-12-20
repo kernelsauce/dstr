@@ -65,7 +65,9 @@ dstr *dstr_version();
    and 1 for success. Booleans are not used as to support C89 compilers.
    Functions returning pointers will return 0  on memory allocation
    failures.   */
-#define DSTR_MEM_EXPAND_RATE 2 // How much to grow per allocation.
+#ifndef DSTR_MEM_EXPAND_RATE
+  #define DSTR_MEM_EXPAND_RATE 2 // How much to grow per allocation.
+#endif
 //#define DSTR_MEM_CLEAR  // When free'ing or reallocing clear contents.
 
 /* Create a new dynamic string object.   */

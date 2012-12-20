@@ -191,7 +191,7 @@ void test_dstr_growth_rate()
     dstr_growth_rate(str, 5);
     dstr_append_cstr(str, "data");
     CU_ASSERT_EQUAL(str->mem,
-                    (alloc_before + (8 * sizeof(char))) * str->grow_r);
+                    (alloc_before + ((8 + 1) * sizeof(char))) * str->grow_r);
     dstr_decref(str);
 }
 
