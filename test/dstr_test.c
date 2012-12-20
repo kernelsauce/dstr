@@ -590,6 +590,15 @@ void test_dstr_vector_bounds_prot()
     CU_ASSERT_PTR_NULL(str);
     str = dstr_vector_at(vec, -100);
     CU_ASSERT_PTR_NULL(str);
+    str = dstr_vector_back(vec);
+    CU_ASSERT_PTR_NULL(str);
+    str = dstr_vector_front(vec);
+    CU_ASSERT_PTR_NULL(str);
+
+     dstr_vector_pop_back(vec);
+    dstr_vector_pop_front(vec);
+
+
     dstr_vector_decref(vec);
 }
 

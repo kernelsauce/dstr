@@ -48,7 +48,7 @@ static void *__dstr_safe_realloc(void *ptr, size_t new_sz, size_t old_sz)
     if (!tmp_ptr)
         return 0;
     if (ptr){
-        if (old_sz < new_sz) // increase buffer case
+        if (old_sz <= new_sz) // increase buffer case
             memcpy(tmp_ptr, ptr, old_sz);
         if (new_sz < old_sz)
             memcpy(tmp_ptr, ptr, new_sz); // decrease buffer case
