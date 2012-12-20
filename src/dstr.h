@@ -96,6 +96,9 @@ void dstr_decref(dstr *str);
 /* Increases reference to the string by one.   */
 #define dstr_incref(str) (str->ref++)
 
+/* Return current string length (not including sentinel).   */
+size_t dstr_len(const dstr* str);
+
 /* Appends a dynamic string to a dynamic string. See dstr_append_decref for
    a reference stealing implementation   */
 int dstr_append(dstr* dest, const dstr* src);

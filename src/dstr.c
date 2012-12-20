@@ -50,7 +50,7 @@ static void *__dstr_safe_realloc(void *ptr, size_t new_sz, size_t old_sz)
     if (ptr){
         if (old_sz <= new_sz) // increase buffer case
             memcpy(tmp_ptr, ptr, old_sz);
-        if (new_sz < old_sz)
+        else if (new_sz < old_sz)
             memcpy(tmp_ptr, ptr, new_sz); // decrease buffer case
         __dstr_safe_memset(ptr, 0, old_sz);
         free(ptr);
@@ -344,6 +344,11 @@ int dstr_ends_with_dstr(const dstr *str, dstr *ends_with)
     return dstr_ends_with(str, dstr_to_cstr_const(ends_with));
 }
 
+size_t dstr_len(const dstr *str)
+{
+    return str->sz;
+}
+
 int dstr_append(dstr* dest, const dstr* src)
 {
     size_t total = src->sz + dest->sz;
@@ -382,17 +387,25 @@ int dstr_append_cstrn(dstr* dest, const char *src, size_t n)
 
 int dstr_sprintf(dstr *str, const char *fmt, ...)
 {
-    char *tmp;
-    int rc;
+    int rc, len, new_sz;
+    size_t space = str->mem - (str->sz + 1);
+    char *start_ptr = str->data + str->sz;
+    va_list ap, ap_c;
 
-    va_list ap;
+    va_copy(ap_c, ap);
     va_start(ap, fmt);
-    vasprintf(&tmp, fmt, ap);
+    len = vsnprintf(start_ptr, space, fmt, ap);
     va_end(ap);
-    if (!tmp)
-        return 0;
-    rc = dstr_append_cstr(str, tmp);
-    free(tmp);
+    new_sz = str->sz + len + 1;
+    if (space <= len){
+        if (!__dstr_alloc(str, new_sz))
+            return 0;
+        start_ptr = str->data + str->sz;
+        va_start(ap_c, fmt);
+        vsnprintf(start_ptr, new_sz, fmt, ap_c);
+        va_end(ap_c);
+    }
+    str->sz = new_sz - 1;
     return rc;
 }
 

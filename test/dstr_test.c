@@ -140,6 +140,7 @@ void test_dstr_sprintf()
 {
     dstr *str = dstr_with_initial("I am this old: ");
     dstr_sprintf(str, "%d and in 2 years I am: %d", 30, 32);
+    dstr_print(str);
     CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(str), "I am this old: 30 and in 2 years I am: 32");
     dstr_decref(str);
 }
