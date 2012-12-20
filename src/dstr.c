@@ -415,7 +415,7 @@ int dstr_append_cstrn(dstr* dest, const char *src, size_t n)
 
 int dstr_sprintf(dstr *str, const char *fmt, ...)
 {
-    int rc, len, new_sz;
+    int len, new_sz;
     size_t space = str->mem - (str->sz + 1);
     char *start_ptr = str->data + str->sz;
     va_list ap, ap_c;
@@ -434,7 +434,7 @@ int dstr_sprintf(dstr *str, const char *fmt, ...)
         va_end(ap_c);
     }
     str->sz = new_sz - 1;
-    return rc;
+    return 1;
 }
 
 int dstr_append_decref(dstr* dest, dstr* src)
