@@ -89,6 +89,34 @@ static int __dstr_can_hold(const dstr *str, size_t sz)
         return (sz < str->mem);
 }
 
+/* strdup implementation for those who are not so fortunate.   */
+static char *__dstr_strdup(const char* str)
+{
+    char *cpy;
+    size_t len = strlen(str);
+
+    cpy = malloc(len + 1);
+    if (!cpy)
+        return 0;
+    cpy[len] = '\0';
+    return memcpy(cpy, str, len);
+}
+
+/* strndup implementation.   */
+static char *__dstr_strndup (const char *str, size_t sz)
+{
+    char *cpy;
+    size_t len = strlen(str);
+
+    if (sz < len)
+        len = sz;
+    cpy = malloc(len + 1);
+    if (!cpy)
+        return 0;
+    cpy[len] = '\0';
+    return memcpy(cpy, str, len);
+}
+
 void dstr_decref(dstr *str)
 {
     str->ref--;
@@ -133,7 +161,7 @@ dstr *dstr_with_initial(const char *initial)
     str->sz = strlen(initial);
     str->grow_r = DSTR_MEM_EXPAND_RATE;
     str->mem = (str->sz + 1) * sizeof(char);
-    str->data = strdup(initial);
+    str->data = __dstr_strdup(initial);
     if (!str->data)
         return 0;
     str->ref = 1;
@@ -148,7 +176,7 @@ dstr *dstr_with_initialn(const char *initial, size_t n)
         return 0;
     str->sz = n;
     str->grow_r = DSTR_MEM_EXPAND_RATE;
-    str->data = strndup(initial, n);
+    str->data = __dstr_strndup(initial, n);
     if (!str->data)
         return 0;
     str->mem = (str->sz + 1) * sizeof(char);
@@ -176,7 +204,7 @@ dstr *dstr_with_prealloc(size_t sz)
 
 char *dstr_copy_to_cstr(const dstr* str)
 {
-    return strndup(str->data, str->sz + 1);
+    return __dstr_strndup(str->data, str->sz + 1);
 }
 
 int dstr_compact(dstr *str)
