@@ -140,8 +140,31 @@ void test_dstr_sprintf()
 {
     dstr *str = dstr_with_initial("I am this old: ");
     dstr_sprintf(str, "%d and in 2 years I am: %d", 30, 32);
-    dstr_print(str);
     CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(str), "I am this old: 30 and in 2 years I am: 32");
+    dstr_decref(str);
+}
+
+void test_dstr_to_upper()
+{
+    dstr *str = dstr_with_initial("test me!");
+    dstr_to_upper(str);
+    CU_ASSERT_STRING_EQUAL("TEST ME!", dstr_to_cstr_const(str));
+    dstr_decref(str);
+}
+
+void test_dstr_to_lower()
+{
+    dstr *str = dstr_with_initial("TEST ME");
+    dstr_to_lower(str);
+    CU_ASSERT_STRING_EQUAL("test me", dstr_to_cstr_const(str));
+    dstr_decref(str);
+}
+
+void test_dstr_capitalize()
+{
+    dstr *str = dstr_with_initial("test me");
+    dstr_capitalize(str);
+    CU_ASSERT_STRING_EQUAL("Test me", dstr_to_cstr_const(str));
     dstr_decref(str);
 }
 
@@ -371,15 +394,16 @@ void test_dstr_list_append_decref()
 void test_dstr_list_foreach()
 {
     dstr_list *list = dstr_list_new();
-    dstr_link *link;
+    dstr_link *link = 0;
+    int count = 0;
 
     dstr_list_add_decref(list, dstr_with_initial("str1"));
     dstr_list_add_decref(list, dstr_with_initial("str2"));
     dstr_list_add_decref(list, dstr_with_initial("str3"));
 
     DSTR_LIST_FOREACH(list, link){
-        dstr_append_cstr(link->str, "\n");
-        dstr_print(link->str);
+        CU_ASSERT_PTR_NOT_NULL(link);
+        count++;
     }
 
     dstr_list_decref(list);
@@ -809,6 +833,9 @@ int main()
            !CU_add_test(dstr_suite, "dstr_append_decref", test_dstr_append_decref) ||
            !CU_add_test(dstr_suite, "dstr_append_cstr", test_dstr_append_cstr) ||
            !CU_add_test(dstr_suite, "dstr_sprintf", test_dstr_sprintf) ||
+           !CU_add_test(dstr_suite, "dstr_to_upper", test_dstr_to_upper) ||
+           !CU_add_test(dstr_suite, "dstr_to_lower", test_dstr_to_lower) ||
+           !CU_add_test(dstr_suite, "dstr_capitalize", test_dstr_capitalize) ||
            !CU_add_test(dstr_suite, "dstr_prepend", test_dstr_prepend) ||
            !CU_add_test(dstr_suite, "dstr_prepend_cstr", test_dstr_prepend_cstr) ||
            !CU_add_test(dstr_suite, "dstr_clear", test_dstr_clear) ||
