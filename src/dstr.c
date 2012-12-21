@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <ctype.h>
 #include <malloc.h>
 
 #include "dstr.h"
@@ -437,6 +438,29 @@ int dstr_sprintf(dstr *str, const char *fmt, ...)
     return 1;
 }
 
+void dstr_to_upper(dstr *str)
+{
+    int sz = str->sz;
+    while(sz--){
+        str->data[sz] = toupper(str->data[sz]);
+    }
+}
+
+void dstr_to_lower(dstr *str)
+{
+    int sz = str->sz;
+    while(sz--){
+        str->data[sz] = tolower(str->data[sz]);
+    }
+}
+
+void dstr_capitalize(dstr *str)
+{
+    if (!str->sz)
+        return;
+    str->data[0] = toupper(str->data[0]);
+}
+
 int dstr_append_decref(dstr* dest, dstr* src)
 {
     if (dstr_append(dest, src)){
@@ -552,9 +576,9 @@ dstr_list *dstr_list_new()
 
 int dstr_list_add(dstr_list *list, dstr *str)
 {
-    dstr_link_t *link;
+    dstr_link *link;
 
-    link = calloc(1, sizeof(dstr_link_t));
+    link = calloc(1, sizeof(dstr_link));
     if (!link)
         return 0;
 
@@ -580,10 +604,10 @@ int dstr_list_add_decref(dstr_list *dest, dstr *str)
     return rc;
 }
 
-void dstr_list_remove(dstr_list *list, dstr_link_t *link)
+void dstr_list_remove(dstr_list *list, dstr_link *link)
 {
-    dstr_link_t * prev;
-    dstr_link_t * next;
+    dstr_link * prev;
+    dstr_link * next;
 
     prev = link->prev;
     next = link->next;
@@ -611,9 +635,9 @@ void dstr_list_remove(dstr_list *list, dstr_link_t *link)
 
 size_t dstr_list_size(const dstr_list *list)
 {
-    dstr_link_t *link;
+    dstr_link *link;
     size_t sz = 0;
-    for (link = list->head; link; link = link->next){
+    DSTR_LIST_FOREACH(list, link){
         sz++;
     }
     return sz;
@@ -623,7 +647,7 @@ void dstr_list_traverse(dstr_list * list,
                         void (*callback)(dstr *, void *),
                         void *user_data)
 {
-    dstr_link_t *link;
+    dstr_link *link;
 
     for (link = list->head; link; link = link->next){
         callback((void *) link->str, user_data);
@@ -634,7 +658,7 @@ void dstr_list_traverse_reverse (dstr_list *list,
                                  void (*callback)(dstr *, void *),
                                  void *userdata)
 {
-    dstr_link_t * link;
+    dstr_link * link;
 
     for (link = list->tail; link; link = link->prev) {
         callback ((void *) link->str, userdata);
@@ -643,7 +667,7 @@ void dstr_list_traverse_reverse (dstr_list *list,
 
 void dstr_list_traverse_delete (dstr_list * list, int (*callback)(dstr *))
 {
-    dstr_link_t *link;
+    dstr_link *link;
 
     for (link = list->head; link; link = link->next) {
         if (callback((void *) link->str)) {
@@ -654,8 +678,8 @@ void dstr_list_traverse_delete (dstr_list * list, int (*callback)(dstr *))
 
 void dstr_list_decref (dstr_list *list)
 {
-    dstr_link_t *link;
-    dstr_link_t *next;
+    dstr_link *link;
+    dstr_link *next;
 
     list->ref--;
     if (!list->ref){
@@ -671,7 +695,7 @@ void dstr_list_decref (dstr_list *list)
 dstr *dstr_list_to_dstr(const char *sep, dstr_list *list)
 {
     dstr *str = dstr_new();
-    dstr_link_t *link;
+    dstr_link *link;
 
     if (sep){
         for (link = list->head; link; link = link->next){
@@ -686,6 +710,20 @@ dstr *dstr_list_to_dstr(const char *sep, dstr_list *list)
     }
 
     return str;
+}
+
+dstr_list *dstr_list_search_contains(dstr_list *search, const char * substr)
+{
+    dstr_list *found = dstr_list_new();
+    dstr_link *link;
+
+    DSTR_LIST_FOREACH(search, link){
+        if (dstr_contains(link->str, substr)){
+            dstr_list_add(found, link->str);
+        }
+    }
+
+    return found;
 }
 
 

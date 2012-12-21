@@ -122,6 +122,13 @@ int dstr_append_cstrn(dstr* dest, const char *src, size_t n);
 /* Append string printf style.   */
 int dstr_sprintf(dstr *str, const char *fmt, ...);
 
+/* Make complete string upper-case.   */
+void dstr_to_upper(dstr *str);
+/* Make complete string lower-case.   */
+void dstr_to_lower(dstr *str);
+/* Capitalize first letter.   */
+void dstr_capitalize(dstr *str);
+
 /* Creates a copy of a dynamic string object, with one reference.   */
 dstr *dstr_copy(const dstr *copy);
 
@@ -208,6 +215,10 @@ void dstr_list_traverse_delete (dstr_list * list, int (*callback)(dstr *));
 /* Concat a string list a dynamic string. Seperator to seperate each list
    element is optional, use 0 if not wanted.   */
 dstr *dstr_list_to_dstr(const char *sep, dstr_list *list);
+
+/* Returns a new list of strings found in input list that contains
+   sub string.   */
+dstr_list *dstr_list_search_contains(dstr_list *search, const char * substr);
 
 /* Decrement one reference from string list.   */
 void dstr_list_decref (dstr_list *list);
