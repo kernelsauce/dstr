@@ -384,7 +384,7 @@ int dstr_append(dstr* dest, const dstr* src)
         if (!__dstr_alloc(dest, total + 1))
             return 0;
     }
-    strcpy(dest->data+dest->sz, src->data);
+    memcpy(dest->data+dest->sz, src->data, src->sz + 1);
     dest->sz = total;
     return 1;
 }
@@ -408,7 +408,7 @@ int dstr_append_cstrn(dstr* dest, const char *src, size_t n)
         if (!__dstr_alloc(dest, total + 1))
             return 0;
     }
-    strncpy(dest->data+dest->sz, src, n);
+    memcpy(dest->data+dest->sz, src, n);
     dest->sz = total;
     return 1;
 }
