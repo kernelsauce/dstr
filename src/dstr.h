@@ -39,15 +39,15 @@ typedef struct dstr{
     unsigned int grow_r; // Memory growth rate.
 } dstr;
 
-typedef struct dstr_link_t {
+typedef struct dstr_link {
     dstr *str;
-    struct dstr_link_t *prev;
-    struct dstr_link_t *next;
-} dstr_link_t;
+    struct dstr_link *prev;
+    struct dstr_link *next;
+} dstr_link;
 
 typedef struct dstr_list {
-    dstr_link_t *head;
-    dstr_link_t *tail;
+    dstr_link *head;
+    dstr_link *tail;
     int ref;
 } dstr_list;
 
@@ -94,7 +94,8 @@ char *dstr_copy_to_cstr(const dstr* str);
    If no more references exists, the string is free'd.   */
 void dstr_decref(dstr *str);
 /* Increases reference to the string by one.   */
-#define dstr_incref(str) (str->ref++)
+#define dstr_incref(str) \
+    (str->ref++)
 
 /* Return current string length (not including sentinel).   */
 size_t dstr_len(const dstr* str);
@@ -183,7 +184,7 @@ int dstr_list_add(dstr_list *list, dstr *str);
 int dstr_list_add_decref(dstr_list *dest, dstr *str);
 
 /* Remove a dynamic string from a list (string is decref'ed).   */
-void dstr_list_remove(dstr_list *list, dstr_link_t *link);
+void dstr_list_remove(dstr_list *list, dstr_link *link);
 
 /* Get the amount of elements in the list. SLOOW!  */
 size_t dstr_list_size(const dstr_list *list);
@@ -200,6 +201,9 @@ void dstr_list_traverse_reverse (dstr_list *list,
 /* Traverse a list with a callback that return 0 or 1 depending on it wants
    to delete the element or not.   */
 void dstr_list_traverse_delete (dstr_list * list, int (*callback)(dstr *));
+/* For each macro for list.    */
+#define DSTR_LIST_FOREACH(list, link) \
+    for (link = list->head; link; link = link->next)
 
 /* Concat a string list a dynamic string. Seperator to seperate each list
    element is optional, use 0 if not wanted.   */
@@ -208,7 +212,8 @@ dstr *dstr_list_to_dstr(const char *sep, dstr_list *list);
 /* Decrement one reference from string list.   */
 void dstr_list_decref (dstr_list *list);
 /* Add one reference to the string list.   */
-#define dstr_list_incref(list) (list->ref++)
+#define dstr_list_incref(list) \
+    (list->ref++)
 
 /*                    DYNAMIC STRING VECTOR PUBLIC API                      */
 /* Note: There is no safety that prevents out of boundary positions to be
@@ -266,6 +271,7 @@ size_t dstr_vector_size(const dstr_vector *vec);
  * vector is emptied (and strings decrefed) and free'd.   */
 void dstr_vector_decref(dstr_vector *vec);
 /* Increment referece count by one.   */
-#define dstr_vector_incref(vec) (vec->ref++)
+#define dstr_vector_incref(vec) \
+    (vec->ref++)
 
 #endif /* dstr.h */
