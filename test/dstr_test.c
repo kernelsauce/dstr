@@ -368,6 +368,23 @@ void test_dstr_list_append_decref()
     dstr_list_decref(list);
 }
 
+void test_dstr_list_foreach()
+{
+    dstr_list *list = dstr_list_new();
+    dstr_link *link;
+
+    dstr_list_add_decref(list, dstr_with_initial("str1"));
+    dstr_list_add_decref(list, dstr_with_initial("str2"));
+    dstr_list_add_decref(list, dstr_with_initial("str3"));
+
+    DSTR_LIST_FOREACH(list, link){
+        dstr_append_cstr(link->str, "\n");
+        dstr_print(link->str);
+    }
+
+    dstr_list_decref(list);
+}
+
 void __traverse_callback(dstr *str, void *append)
 {
     dstr_append(append, str);
@@ -817,6 +834,7 @@ int main()
            !CU_add_test(dstr_list_suite, "dstr_list_traverse", test_dstr_list_traverse) ||
            !CU_add_test(dstr_list_suite, "dstr_list_traverse_reverse", test_dstr_list_traverse_reverse) ||
            !CU_add_test(dstr_list_suite, "dstr_list_traverse_size", test_dstr_list_size) ||
+           !CU_add_test(dstr_list_suite, "DSTR_LIST_FOREACH", test_dstr_list_foreach) ||
            !CU_add_test(dstr_list_suite, "dstr_list_append_decref", test_dstr_list_append_decref)){
       CU_cleanup_registry();
       return CU_get_error();
