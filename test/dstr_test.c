@@ -207,18 +207,6 @@ void test_dstr_compact()
     dstr_decref(str);
 }
 
-void test_dstr_growth_rate()
-{
-    dstr *str = dstr_with_initial("data");
-    int alloc_before = str->mem;
-
-    dstr_growth_rate(str, 5);
-    dstr_append_cstr(str, "data");
-    CU_ASSERT_EQUAL(str->mem,
-                    (alloc_before + ((8 + 1) * sizeof(char))) * str->grow_r);
-    dstr_decref(str);
-}
-
 void test_dstr_starts_with_dstr()
 {
     dstr *match = dstr_with_initial("something to match");
@@ -407,6 +395,42 @@ void test_dstr_list_foreach()
     }
 
     dstr_list_decref(list);
+}
+
+void test_dstr_list_bencode()
+{
+    dstr_list *list = dstr_list_new();
+    dstr *benc;
+
+    dstr_list_add_decref(list, dstr_with_initial("str1"));
+    dstr_list_add_decref(list, dstr_with_initial("str2"));
+    dstr_list_add_decref(list, dstr_with_initial("str3"));
+    benc = dstr_list_bencode(list);
+    CU_ASSERT_STRING_EQUAL("l4:str14:str24:str3e", dstr_to_cstr_const(benc));
+    dstr_decref(benc);
+    dstr_list_decref(list);
+}
+
+void test_dstr_list_bdecode()
+{
+    dstr_list *list = dstr_list_new();
+    dstr_list *decoded_list;
+    dstr *benc;
+    dstr *comp;
+
+    dstr_list_add_decref(list, dstr_with_initial("str1"));
+    dstr_list_add_decref(list, dstr_with_initial("str2"));
+    dstr_list_add_decref(list, dstr_with_initial("str3"));
+    benc = dstr_list_bencode(list);
+    CU_ASSERT_STRING_EQUAL("l4:str14:str24:str3e", dstr_to_cstr_const(benc));
+    dstr_list_decref(list);
+
+    decoded_list = dstr_list_bdecode(dstr_to_cstr_const(benc));
+    comp = dstr_list_to_dstr(", ", decoded_list);
+    CU_ASSERT_STRING_EQUAL("str1, str2, str3", dstr_to_cstr_const(comp));
+    dstr_list_decref(decoded_list);
+    dstr_decref(benc);
+    dstr_decref(comp);
 }
 
 void __traverse_callback(dstr *str, void *append)
@@ -788,6 +812,56 @@ void test_list_append_speed()
     printf("time used for 1000000 insertion to list: %d seconds %d milliseconds. ", msec/1000, msec%1000);
 }
 
+void test_list_bencode_speed()
+{
+    dstr *str = dstr_with_initial("append me"), *decoded;
+    dstr_list *list = dstr_list_new();
+    clock_t start, diff;
+    int i, msec;
+
+    for (i = 0; i < 1000000; i++){
+        dstr_list_add(list, str);
+    }
+
+    start = clock();
+
+    decoded = dstr_list_bencode(list);
+
+    diff = clock() - start;
+
+    msec = diff * 1000 / CLOCKS_PER_SEC;
+    dstr_list_decref(list);
+    dstr_decref(str);
+    dstr_decref(decoded);
+    printf("time used for size 1000000 list to bencoded string: %d seconds %d milliseconds. ", msec/1000, msec%1000);
+}
+
+void test_list_decode_speed()
+{
+    dstr *str = dstr_with_initial("append me"), *decoded;
+    dstr_list *list= dstr_list_new(), *encoded ;
+    clock_t start, diff;
+    int i, msec;
+
+    for (i = 0; i < 100000; i++){
+        dstr_list_add(list, str);
+    }
+    decoded = dstr_list_bencode(list);
+
+    start = clock();
+
+    encoded = dstr_list_bdecode(dstr_to_cstr_const(decoded));
+
+    diff = clock() - start;
+
+    msec = diff * 1000 / CLOCKS_PER_SEC;
+    dstr_list_decref(list);
+    dstr_list_decref(encoded);
+    dstr_decref(str);
+    dstr_decref(decoded);
+    printf("time used for bencoded 100000 element list to dstr_list: %d seconds %d milliseconds. ", msec/1000, msec%1000);
+}
+
 int main()
 {
    CU_pSuite dstr_suite, dstr_list_suite, dstr_vector_suite, typical;
@@ -840,7 +914,6 @@ int main()
            !CU_add_test(dstr_suite, "dstr_prepend_cstr", test_dstr_prepend_cstr) ||
            !CU_add_test(dstr_suite, "dstr_clear", test_dstr_clear) ||
            !CU_add_test(dstr_suite, "dstr_compact", test_dstr_compact) ||
-           !CU_add_test(dstr_suite, "dstr_growth_rate", test_dstr_growth_rate) ||
            !CU_add_test(dstr_suite, "dstr_starts_with_dstr", test_dstr_starts_with_dstr) ||
            !CU_add_test(dstr_suite, "dstr_starts_with", test_dstr_starts_with) ||
            !CU_add_test(dstr_suite, "dstr_ends_with", test_dstr_ends_with) ||
@@ -862,6 +935,8 @@ int main()
            !CU_add_test(dstr_list_suite, "dstr_list_traverse_reverse", test_dstr_list_traverse_reverse) ||
            !CU_add_test(dstr_list_suite, "dstr_list_traverse_size", test_dstr_list_size) ||
            !CU_add_test(dstr_list_suite, "DSTR_LIST_FOREACH", test_dstr_list_foreach) ||
+           !CU_add_test(dstr_list_suite, "dstr_list_bencode", test_dstr_list_bencode) ||
+           !CU_add_test(dstr_list_suite, "dstr_list_bdecode", test_dstr_list_bdecode) ||
            !CU_add_test(dstr_list_suite, "dstr_list_append_decref", test_dstr_list_append_decref)){
       CU_cleanup_registry();
       return CU_get_error();
@@ -891,7 +966,9 @@ int main()
            !CU_add_test(typical, "test_vector_append_speed", test_vector_append_speed) ||
            !CU_add_test(typical, "test_vector_append_speed_no_prealloc", test_vector_append_speed_no_prealloc) ||
            !CU_add_test(typical, "test_vector_append_front_speed", test_vector_append_front_speed) ||
-           !CU_add_test(typical, "test_vector_list_speed", test_list_append_speed) ||
+           !CU_add_test(typical, "test_list_append_speed", test_list_append_speed) ||
+           !CU_add_test(typical, "test_list_bencode_speed", test_list_bencode_speed) ||
+           !CU_add_test(typical, "test_list_decode_speed", test_list_decode_speed) ||
            !CU_add_test(typical, "test_diverse_things", test_diverse_things)){
       CU_cleanup_registry();
       return CU_get_error();

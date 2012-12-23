@@ -36,7 +36,6 @@ typedef struct dstr{
     size_t sz; // Current size of string.
     size_t mem; // Current memory allocated.
     unsigned int ref; // Reference count.
-    unsigned int grow_r; // Memory growth rate.
 } dstr;
 
 typedef struct dstr_link {
@@ -161,12 +160,6 @@ dstr_vector *dstr_split_to_vector(const dstr *str, const char *sep);
    is returned.   */
 dstr_list *dstr_split_to_list(const dstr *str, const char *sep);
 
-/* Modify the growth rate of memory when doing new allocations. Higher rate
-   means more memory potentially lost, but string concatination speeds up.
-   Lower rate means the opposite. The amount of memory to be allocated is
-   multiplied by rate. Default is defined in DSTR_MEM_EXPAND_RATE.   */
-void dstr_growth_rate(dstr *dest, int rate);
-
 /* Print the string to stdout.   */
 int dstr_print(const dstr *src);
 
@@ -219,6 +212,12 @@ dstr *dstr_list_to_dstr(const char *sep, dstr_list *list);
 /* Returns a new list of strings found in input list that contains
    sub string.   */
 dstr_list *dstr_list_search_contains(dstr_list *search, const char * substr);
+
+/* Decode a C string to dstr_list.    */
+dstr_list *dstr_list_bdecode(const char *str);
+
+/* Bencode a string list.    */
+dstr *dstr_list_bencode(const dstr_list *list);
 
 /* Decrement one reference from string list.   */
 void dstr_list_decref (dstr_list *list);

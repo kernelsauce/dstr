@@ -67,7 +67,7 @@ static int __dstr_alloc(dstr* str, size_t sz)
     size_t more_mem;
     void *tmp_ptr;
 
-    more_mem = (str->mem + (sz * sizeof(char))) * str->grow_r;
+    more_mem = (str->mem + (sz * sizeof(char))) * DSTR_MEM_EXPAND_RATE;
 #ifdef DSTR_MEM_CLEAR
     tmp_ptr = __dstr_safe_realloc(str->data, more_mem, str->mem);
 #else
@@ -104,7 +104,7 @@ static char *__dstr_strdup(const char* str)
 }
 
 /* strndup implementation.   */
-static char *__dstr_strndup (const char *str, size_t sz)
+static char *__dstr_strndup(const char *str, size_t sz)
 {
     char *cpy;
     size_t len = strlen(str);
@@ -147,7 +147,6 @@ dstr *dstr_new()
         return 0;
     str->sz = 0;
     str->data = 0;
-    str->grow_r = DSTR_MEM_EXPAND_RATE;
     str->mem = 0;
     str->ref = 1;
     return str;
@@ -160,7 +159,6 @@ dstr *dstr_with_initial(const char *initial)
     if (!str)
         return 0;
     str->sz = strlen(initial);
-    str->grow_r = DSTR_MEM_EXPAND_RATE;
     str->mem = (str->sz + 1) * sizeof(char);
     str->data = __dstr_strdup(initial);
     if (!str->data)
@@ -176,7 +174,6 @@ dstr *dstr_with_initialn(const char *initial, size_t n)
     if (!str)
         return 0;
     str->sz = n;
-    str->grow_r = DSTR_MEM_EXPAND_RATE;
     str->data = __dstr_strndup(initial, n);
     if (!str->data)
         return 0;
@@ -193,7 +190,6 @@ dstr *dstr_with_prealloc(size_t sz)
     if (!str)
         return 0;
     str->sz = 0;
-    str->grow_r = DSTR_MEM_EXPAND_RATE;
     str->data = malloc(pre_alloc_mem);
     if (!str->data)
         return 0;
@@ -555,10 +551,6 @@ int dstr_print(const dstr *src)
     return printf("%s", src->data);
 }
 
-void dstr_growth_rate(dstr *dest, int rate)
-{
-    dest->grow_r = rate;
-}
 
 
 /*                          DYNAMIC STRING LIST                             */
@@ -724,6 +716,45 @@ dstr_list *dstr_list_search_contains(dstr_list *search, const char * substr)
     }
 
     return found;
+}
+
+dstr_list *dstr_list_bdecode(const char *str)
+{
+    size_t str_sz;
+    dstr_list *list;
+
+    if (str[0] != 'l') // Formatting might be sane.
+        return 0;
+    list = dstr_list_new();
+    str++;
+    for (;;){
+        str_sz = 0;
+        while (isdigit(*str)){
+            str_sz = str_sz * 10 + (*str - '0');
+            str++;
+        }
+        str++; // Consume 'l'
+        if (!dstr_list_add_decref(list, dstr_with_initialn(str, str_sz)))
+            dstr_list_decref(list);
+        str += str_sz;
+        if (*str == 'e')
+            break; // End of list.
+    }
+    return list;
+
+}
+
+dstr *dstr_list_bencode(const dstr_list *list)
+{
+    dstr *byte_arr = dstr_with_initial("l");
+    dstr_link *link;
+
+    DSTR_LIST_FOREACH(list, link){
+        dstr_sprintf(byte_arr, "%d:", dstr_len(link->str));
+        dstr_append(byte_arr, link->str);
+    }
+    dstr_append_cstr(byte_arr, "e");
+    return byte_arr;
 }
 
 
