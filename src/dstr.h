@@ -27,10 +27,6 @@
 #define DSTR_MINOR_VERSION 0
 #define DSTR_VERSION "1.0"
 
-/* Check boundaries for containers access if defined. Slowdown, better to
-   code right.  */
-//#define DSTR_MEM_SECURITY
-
 typedef struct dstr{
     char* data; // Internal pointer.
     size_t sz; // Current size of string.
@@ -38,13 +34,13 @@ typedef struct dstr{
     unsigned int ref; // Reference count.
 } dstr;
 
-typedef struct dstr_link {
+typedef struct dstr_link{
     dstr *str;
     struct dstr_link *prev;
     struct dstr_link *next;
 } dstr_link;
 
-typedef struct dstr_list {
+typedef struct dstr_list{
     dstr_link *head;
     dstr_link *tail;
     int ref;
@@ -63,7 +59,11 @@ dstr *dstr_version();
 /* Note: All functions that returns a integer will return 0 for failure
    and 1 for success. Booleans are not used as to support C89 compilers.
    Functions returning pointers will return 0  on memory allocation
-   failures.   */
+   failures.
+
+   Compile time define options:
+   DSTR_MEM_EXPAND_RATE: defines how many times to multiply memory
+   allocations to give avoid allocation thrasing.   */
 #ifndef DSTR_MEM_EXPAND_RATE
   #define DSTR_MEM_EXPAND_RATE 2 // How much to grow per allocation.
 #endif
@@ -228,10 +228,18 @@ void dstr_list_decref (dstr_list *list);
 /*                    DYNAMIC STRING VECTOR PUBLIC API                      */
 /* Note: There is no safety that prevents out of boundary positions to be
    used, unless DSTR_MEM_SECURITY IS DEFINED TO 1! E.g dstr_vector_back on a
-   empty vector will give undefined behaviour.    */
+   empty vector will give undefined behaviour.
+
+   Compile time define options:
+   DSTR_MEM_SECURITY: if defined boundaries for vectors are checked. If a
+   invalid position is requested a null pointer will be returned.
+   DSTR_VECTOR_MEM_EXPAND_RATE: defines how many times to multiply memory
+   allocations to give avoid allocation thrasing.   */
 #define DSTR_VECTOR_END 0xffffff // End of vector position magix.
 #define DSTR_VECTOR_BEGIN  0x0 // Start of vector position magix.
-#define DSTR_VECTOR_MEM_EXPAND_RATE 3 // How much to grow per allocation.
+#ifndef DSTR_VECTOR_MEM_EXPAND_RATE
+    #define DSTR_VECTOR_MEM_EXPAND_RATE 3 // How much to grow per allocation.
+#endif
 
 /* Create a new vector with no initial size. To avoid thrashing of reallocations
    it is advised to prealloc large vectors with dstr_vector_prealloc.   */

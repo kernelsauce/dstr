@@ -1,6 +1,6 @@
 CC=gcc
 AR=ar
-CFLAGS= -DDSTR_MEM_SECURITY -DDSTR_MEM_CLEAR -Wall -O3 -fPIC -I./src
+CFLAGS= -Wall -O3 -fPIC -I./src
 LDFLAGS=
 OBJECTS=dstr.o
 LIBRARY=libdstr
