@@ -835,6 +835,7 @@ static int __dstr_vector_can_hold(const dstr_vector *vec, unsigned int elements)
 int dstr_vector_insert(dstr_vector *vec, size_t pos, dstr *str)
 {
     int new_sz = vec->sz + 1, move_n, move_ptr;
+
 #ifdef DSTR_MEM_SECURITY
     if (pos != DSTR_VECTOR_END && vec->sz - 1 < pos)
         return 0;
@@ -850,14 +851,7 @@ int dstr_vector_insert(dstr_vector *vec, size_t pos, dstr *str)
         dstr_incref(str);
         return 1;
     } else {
-        move_n = vec->sz - pos;
-        move_ptr = vec->sz;
-        while(move_n){
-            vec->arr[move_ptr] = vec->arr[move_ptr-1];
-            move_ptr--;
-            move_n--;
-        }
-
+        memcpy(vec->arr + pos + 1, vec->arr + pos, sizeof(dstr*) * (vec->sz - pos));
         vec->arr[pos] = str;
         vec->sz++;
         dstr_incref(str);
@@ -956,9 +950,7 @@ int dstr_vector_remove(dstr_vector *vec, size_t pos)
         return 1;
     } else {
         dstr_decref(vec->arr[pos]);
-        for (x = pos; x != sz; x++){
-            vec->arr[x] = vec->arr[x + 1];
-        }
+        memmove(vec->arr + pos, vec->arr + pos + 1, sizeof(dstr*) * vec->sz - pos - 1);
         vec->sz--;
         return 1;
     }
