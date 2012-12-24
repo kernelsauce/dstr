@@ -242,16 +242,19 @@ int dstr_compact(dstr *str)
 
 int dstr_contains(const dstr *haystack, const char *needle)
 {
-    if (strstr(haystack->data, needle))
-        return 1;
-    return 0;
+    const char* ptr = haystack->data;
+    size_t n = 0;
+
+    while ((ptr = strstr(ptr, needle))){
+        n++;
+        ptr++;
+    }
+    return n;
 }
 
 int dstr_contains_dstr(const dstr *haystack, const dstr *needle)
 {
-    if (strstr(haystack->data, needle->data))
-        return 1;
-    return 0;
+    return dstr_contains(haystack, dstr_to_cstr_const(needle));
 }
 
 int dstr_starts_with_dstr(const dstr *str, const dstr *starts_with)
@@ -731,6 +734,11 @@ dstr_list *dstr_list_search_contains(dstr_list *search, const char * substr)
     return found;
 }
 
+dstr_list *dstr_list_search_contains_dstr(dstr_list *search, const dstr *substr)
+{
+    return dstr_list_search_contains(search, dstr_to_cstr_const(substr));
+}
+
 dstr_list *dstr_list_bdecode(const char *str)
 {
     size_t str_sz;
@@ -804,7 +812,7 @@ dstr_vector *dstr_vector_prealloc(size_t elements)
 
 void dstr_vector_decref(dstr_vector *vec)
 {
-    int i;
+    size_t i;
     vec->ref--;
     if (!vec->ref){
         for (i = 0; i < vec->sz; i++){
@@ -817,7 +825,7 @@ void dstr_vector_decref(dstr_vector *vec)
 
 static int __dstr_vector_alloc(dstr_vector *vec, unsigned int elements)
 {
-    int alloc = elements * sizeof(dstr *) * DSTR_VECTOR_MEM_EXPAND_RATE;
+    size_t alloc = elements * sizeof(dstr *) * DSTR_VECTOR_MEM_EXPAND_RATE;
     vec->arr = (dstr **)realloc(vec->arr, alloc);
     if (!vec->arr)
         return 0;
@@ -834,7 +842,7 @@ static int __dstr_vector_can_hold(const dstr_vector *vec, unsigned int elements)
 
 int dstr_vector_insert(dstr_vector *vec, size_t pos, dstr *str)
 {
-    int new_sz = vec->sz + 1, move_n, move_ptr;
+    size_t new_sz = vec->sz + 1;
 
 #ifdef DSTR_MEM_SECURITY
     if (pos != DSTR_VECTOR_END && vec->sz - 1 < pos)
@@ -851,7 +859,7 @@ int dstr_vector_insert(dstr_vector *vec, size_t pos, dstr *str)
         dstr_incref(str);
         return 1;
     } else {
-        memcpy(vec->arr + pos + 1, vec->arr + pos, sizeof(dstr*) * (vec->sz - pos));
+        memmove(vec->arr + pos + 1, vec->arr + pos, sizeof(dstr*) * (vec->sz - pos));
         vec->arr[pos] = str;
         vec->sz++;
         dstr_incref(str);
@@ -937,7 +945,7 @@ size_t dstr_vector_size(const dstr_vector *vec)
 
 int dstr_vector_remove(dstr_vector *vec, size_t pos)
 {
-    size_t x, sz = vec->sz - 1;
+    size_t sz = vec->sz - 1;
 #ifdef DSTR_MEM_SECURITY
     if (!vec->sz || (pos != DSTR_VECTOR_END && vec->sz - 1 < pos))
         return 0;
@@ -950,7 +958,9 @@ int dstr_vector_remove(dstr_vector *vec, size_t pos)
         return 1;
     } else {
         dstr_decref(vec->arr[pos]);
-        memmove(vec->arr + pos, vec->arr + pos + 1, sizeof(dstr*) * vec->sz - pos - 1);
+        memmove(vec->arr + pos,
+                vec->arr + pos + 1,
+                sizeof(dstr*) * (vec->sz - pos - 1));
         vec->sz--;
         return 1;
     }

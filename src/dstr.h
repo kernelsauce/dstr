@@ -27,6 +27,12 @@
 #define DSTR_MINOR_VERSION 0
 #define DSTR_VERSION "1.0"
 
+/* Note: All functions that returns a integer will return 0 for failure
+   and 1 for success unless otherwise is specified. Booleans are not used as to
+   support C89 compilers. Functions returning pointers will return 0 on memory
+   allocation failures or out of boundary exceptions (if compiled with boundary
+   protection).    */
+
 typedef struct dstr{
     char* data; // Internal pointer.
     size_t sz; // Current size of string.
@@ -53,15 +59,11 @@ typedef struct dstr_vector{
     unsigned int ref;
 } dstr_vector;
 
+/* Get library version as string. E.g 1.0, 1.0.1.   */
 dstr *dstr_version();
 
 /*                       DYNAMIC STRING PUBLIC API                         */
-/* Note: All functions that returns a integer will return 0 for failure
-   and 1 for success. Booleans are not used as to support C89 compilers.
-   Functions returning pointers will return 0  on memory allocation
-   failures.
-
-   Compile time define options:
+/* Compile time define options:
    DSTR_MEM_EXPAND_RATE: defines how many times to multiply memory
    allocations to give avoid allocation thrasing. Default is 2.
    DSTR_MEM_CLEAR: zero all memory being released to hold characeter arrays. */
@@ -139,11 +141,10 @@ void dstr_clear(dstr *str);
    really big string to a very small one.   */
 int dstr_compact(dstr *str);
 
-/* Search for needle in a haystack (C string).   */
+/* Search for needle in a haystack (C string). Returns n occurences.  */
 int dstr_contains(const dstr *haystack, const char *needle);
-/* Search for needle in a haystack (dynamic string).   */
+/* Search for needle in a haystack (dynamic string). Returns n occurences.  */
 int dstr_contains_dstr(const dstr *haystack, const dstr *needle);
-
 /* Check if string starts with a sub C string.   */
 int dstr_starts_with(const dstr *str, const char *starts_with);
 /* Check if string starts with a sub dstr.   */
@@ -210,8 +211,11 @@ void dstr_list_traverse_delete (dstr_list * list, int (*callback)(dstr *));
 dstr *dstr_list_to_dstr(const char *sep, dstr_list *list);
 
 /* Returns a new list of strings found in input list that contains
-   sub string.   */
+   sub C string.   */
 dstr_list *dstr_list_search_contains(dstr_list *search, const char * substr);
+/* Returns a new list of strings found in input list that contains
+   sub dynamic string.   */
+dstr_list *dstr_list_search_contains_dstr(dstr_list *search, const dstr *substr);
 
 /* Decode a C string to dstr_list.    */
 dstr_list *dstr_list_bdecode(const char *str);
@@ -244,7 +248,6 @@ void dstr_list_decref (dstr_list *list);
 /* Create a new vector with no initial size. To avoid thrashing of reallocations
    it is advised to prealloc large vectors with dstr_vector_prealloc.   */
 dstr_vector *dstr_vector_new();
-
 /* Creates a new vector with a initial size.   */
 dstr_vector *dstr_vector_prealloc(size_t elements);
 
