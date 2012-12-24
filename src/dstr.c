@@ -28,6 +28,19 @@
 
 #include "dstr.h"
 
+dstr *dstr_version()
+{
+    dstr *ver = dstr_with_prealloc(4);
+#ifdef DSTR_LESSER_VERSION
+    dstr_sprintf(ver, "%d.%d.%d", DSTR_MAJOR_VERSION,
+                 DSTR_MINOR_VERSION,
+                 DSTR_LESSER_VERSION);
+#else
+    dstr_sprintf(ver, "%d.%d", DSTR_MAJOR_VERSION, DSTR_MINOR_VERSION);
+#endif
+    return ver;
+}
+
 /*                            DYNAMIC STRING                                 */
 
 #ifdef DSTR_MEM_CLEAR

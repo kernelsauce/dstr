@@ -747,7 +747,7 @@ void test_vector_append_speed()
     clock_t start = clock(), diff;
     int i;
 
-    for (i = 0; i < 1000000; i++){
+    for (i = 0; i < 10000; i++){
         dstr_vector_push_back(vec, str);
     }
 
@@ -755,7 +755,7 @@ void test_vector_append_speed()
     diff = clock() - start;
     dstr_decref(str);
     int msec = diff * 1000 / CLOCKS_PER_SEC;
-    printf("time used for 1000000 push_back to vector: %d seconds %d milliseconds. ", msec/1000, msec%1000);
+    printf("time used for 10000 push_back to vector: %d seconds %d milliseconds. ", msec/1000, msec%1000);
 }
 
 void test_vector_append_speed_no_prealloc()
@@ -765,7 +765,7 @@ void test_vector_append_speed_no_prealloc()
     clock_t start = clock(), diff;
     int i;
 
-    for (i = 0; i < 1000000; i++){
+    for (i = 0; i < 10000; i++){
         dstr_vector_push_back(vec, str);
     }
 
@@ -773,7 +773,7 @@ void test_vector_append_speed_no_prealloc()
     diff = clock() - start;
     dstr_decref(str);
     int msec = diff * 1000 / CLOCKS_PER_SEC;
-    printf("time used for 1000000 push_back to vector: %d seconds %d milliseconds. ", msec/1000, msec%1000);
+    printf("time used for 10000 push_back to vector: %d seconds %d milliseconds. ", msec/1000, msec%1000);
 }
 
 void test_vector_append_front_speed()
@@ -783,7 +783,7 @@ void test_vector_append_front_speed()
     clock_t start = clock(), diff;
     int i;
 
-    for (i = 0; i < 20000; i++){
+    for (i = 0; i < 10000; i++){
         dstr_vector_push_front(vec, str);
     }
 
@@ -791,7 +791,7 @@ void test_vector_append_front_speed()
     diff = clock() - start;
     dstr_decref(str);
     int msec = diff * 1000 / CLOCKS_PER_SEC;
-    printf("time used for 20000 push_front to vector: %d seconds %d milliseconds. ", msec/1000, msec%1000);
+    printf("time used for 10000 push_front to vector: %d seconds %d milliseconds. ", msec/1000, msec%1000);
 }
 
 void test_list_append_speed()
@@ -801,7 +801,7 @@ void test_list_append_speed()
     clock_t start = clock(), diff;
     int i;
 
-    for (i = 0; i < 1000000; i++){
+    for (i = 0; i < 10000; i++){
         dstr_list_add(list, str);
     }
 
@@ -809,7 +809,7 @@ void test_list_append_speed()
     diff = clock() - start;
     dstr_decref(str);
     int msec = diff * 1000 / CLOCKS_PER_SEC;
-    printf("time used for 1000000 insertion to list: %d seconds %d milliseconds. ", msec/1000, msec%1000);
+    printf("time used for 10000 insertion to list: %d seconds %d milliseconds. ", msec/1000, msec%1000);
 }
 
 void test_list_bencode_speed()
@@ -819,7 +819,7 @@ void test_list_bencode_speed()
     clock_t start, diff;
     int i, msec;
 
-    for (i = 0; i < 1000000; i++){
+    for (i = 0; i < 10000; i++){
         dstr_list_add(list, str);
     }
 
@@ -833,7 +833,7 @@ void test_list_bencode_speed()
     dstr_list_decref(list);
     dstr_decref(str);
     dstr_decref(decoded);
-    printf("time used for size 1000000 list to bencoded string: %d seconds %d milliseconds. ", msec/1000, msec%1000);
+    printf("time used for size 10000 list to bencoded string: %d seconds %d milliseconds. ", msec/1000, msec%1000);
 }
 
 void test_list_decode_speed()
@@ -843,7 +843,7 @@ void test_list_decode_speed()
     clock_t start, diff;
     int i, msec;
 
-    for (i = 0; i < 100000; i++){
+    for (i = 0; i < 10000; i++){
         dstr_list_add(list, str);
     }
     decoded = dstr_list_bencode(list);
@@ -859,7 +859,7 @@ void test_list_decode_speed()
     dstr_list_decref(encoded);
     dstr_decref(str);
     dstr_decref(decoded);
-    printf("time used for bencoded 100000 element list to dstr_list: %d seconds %d milliseconds. ", msec/1000, msec%1000);
+    printf("time used for bencoded 10000 element list to dstr_list: %d seconds %d milliseconds. ", msec/1000, msec%1000);
 }
 
 int main()
