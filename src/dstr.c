@@ -31,12 +31,20 @@
 dstr *dstr_version()
 {
     dstr *ver = dstr_with_prealloc(4);
+    if (!ver)
+        return 0;
 #ifdef DSTR_LESSER_VERSION
-    dstr_sprintf(ver, "%d.%d.%d", DSTR_MAJOR_VERSION,
+    if (!dstr_sprintf(ver, "%d.%d.%d", DSTR_MAJOR_VERSION,
                  DSTR_MINOR_VERSION,
-                 DSTR_LESSER_VERSION);
+                 DSTR_LESSER_VERSION)){
+        dstr_decref(ver);
+        return 0;
+    }
 #else
-    dstr_sprintf(ver, "%d.%d", DSTR_MAJOR_VERSION, DSTR_MINOR_VERSION);
+    if (!dstr_sprintf(ver, "%d.%d", DSTR_MAJOR_VERSION, DSTR_MINOR_VERSION)){
+        dstr_decref(ver);
+        return 0;
+    }
 #endif
     return ver;
 }

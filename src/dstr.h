@@ -68,8 +68,8 @@ dstr *dstr_version();
 /*                       DYNAMIC STRING PUBLIC API                         */
 /* Compile time define options:
    DSTR_MEM_EXPAND_RATE: defines how many times to multiply memory
-   allocations to give avoid allocation thrasing. Default is 2.
-   DSTR_MEM_CLEAR: zero all memory being released to hold characeter arrays. */
+   allocations to avoid allocation thrasing. Default is 2.
+   DSTR_MEM_CLEAR: zero all memory being released to hold char arrays. */
 #ifndef DSTR_MEM_EXPAND_RATE
   #define DSTR_MEM_EXPAND_RATE 2 // How much to grow per allocation.
 #endif
