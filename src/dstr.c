@@ -287,18 +287,18 @@ dstr_vector *dstr_split_to_vector(const dstr *str, const char *sep)
         if (!occ_end){
             occ_len = strlen(occ_start);
             dstr_ptr = dstr_with_initialn(occ_start, occ_len);
-            if (!dstr_ptr)
+            if (!dstr_ptr || !dstr_vector_push_back_decref(vec, dstr_ptr)){
+                dstr_vector_decref(vec);
                 return 0;
-            if (!dstr_vector_push_back_decref(vec, dstr_ptr))
-                return 0;
+            }
             return vec;
         } else {
             occ_len = occ_end - occ_start;
             dstr_ptr = dstr_with_initialn(occ_start, occ_len);
-            if (!dstr_ptr)
+            if (!dstr_ptr || !dstr_vector_push_back_decref(vec, dstr_ptr)){
+                dstr_vector_decref(vec);
                 return 0;
-            if (!dstr_vector_push_back_decref(vec, dstr_ptr))
-                return 0;
+            }
             occ_start = occ_end + 1;
         }
     }

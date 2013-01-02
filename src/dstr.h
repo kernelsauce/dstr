@@ -222,7 +222,7 @@ dstr_list *dstr_list_search_contains(dstr_list *search, const char * substr);
    sub dynamic string.   */
 dstr_list *dstr_list_search_contains_dstr(dstr_list *search, const dstr *substr);
 
-/* Decode a C string to dstr_list.    */
+/* Decode a bencoded list as to dstr_list.    */
 dstr_list *dstr_list_bdecode(const char *str);
 
 /* Bencode a string list.    */
