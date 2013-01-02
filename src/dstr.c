@@ -385,6 +385,14 @@ int dstr_ends_with_dstr(const dstr *str, dstr *ends_with)
     return dstr_ends_with(str, dstr_to_cstr_const(ends_with));
 }
 
+int dstr_matches(const dstr *haystack, const char *needle)
+{
+    int rc = strcmp(dstr_to_cstr_const(haystack), needle);
+    if (!rc)
+        return 1;
+    return 0;
+}
+
 size_t dstr_len(const dstr *str)
 {
     return str->sz;
@@ -859,7 +867,9 @@ int dstr_vector_insert(dstr_vector *vec, size_t pos, dstr *str)
         dstr_incref(str);
         return 1;
     } else {
-        memmove(vec->arr + pos + 1, vec->arr + pos, sizeof(dstr*) * (vec->sz - pos));
+        memmove(vec->arr + pos + 1,
+                vec->arr + pos,
+                sizeof(dstr*) * (vec->sz - pos));
         vec->arr[pos] = str;
         vec->sz++;
         dstr_incref(str);

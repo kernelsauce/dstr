@@ -26,6 +26,9 @@
 #define DSTR_MAJOR_VERSION 1
 #define DSTR_MINOR_VERSION 0
 #define DSTR_VERSION "1.0"
+#ifndef SIZE_MAX
+    #define SIZE_MAX (sizeof(size_t) -1)
+#endif
 
 /* Note: All functions that returns a integer will return 0 for failure
    and 1 for success unless otherwise is specified. Booleans are not used as to
@@ -153,6 +156,8 @@ int dstr_starts_with_dstr(const dstr *str, const dstr *starts_with);
 int dstr_ends_with(const dstr *str, const char *ends_with);
 /* Check if string ends with a sub dstr.   */
 int dstr_ends_with_dstr(const dstr *str, dstr *ends_with);
+/* Check if string is a exact match to sub C string.   */
+int dstr_matches(const dstr *haystack, const char *needle);
 
 /* Split a dynamic string to a vector. If none occurences of seperator is
    found a zero sized vector is returned.   */
@@ -239,7 +244,8 @@ void dstr_list_decref (dstr_list *list);
    invalid position is requested a null pointer will be returned.
    DSTR_VECTOR_MEM_EXPAND_RATE: defines how many times to multiply memory
    allocations to give avoid allocation thrasing.   */
-#define DSTR_VECTOR_END 0xffffff // End of vector position magix.
+#include <limits.h>
+#define DSTR_VECTOR_END SIZE_MAX // End of vector position magix.
 #define DSTR_VECTOR_BEGIN  0x0 // Start of vector position magix.
 #ifndef DSTR_VECTOR_MEM_EXPAND_RATE
     #define DSTR_VECTOR_MEM_EXPAND_RATE 3 // How much to grow per allocation.
