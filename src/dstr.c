@@ -323,18 +323,18 @@ dstr_list *dstr_split_to_list(const dstr *str, const char *sep)
         if (!occ_end){
             occ_len = strlen(occ_start);
             dstr_ptr = dstr_with_initialn(occ_start, occ_len);
-            if (!dstr_ptr)
+            if (!dstr_ptr || !dstr_list_add_decref(list, dstr_ptr)){
+                dstr_list_decref(list);
                 return 0;
-            if (!dstr_list_add_decref(list, dstr_ptr))
-                return 0;
+            }
             return list;
         } else {
             occ_len = occ_end - occ_start;
             dstr_ptr = dstr_with_initialn(occ_start, occ_len);
-            if (!dstr_ptr)
+            if (!dstr_ptr || !dstr_list_add_decref(list, dstr_ptr)){
+                dstr_list_decref(list);
                 return 0;
-            if (!dstr_list_add_decref(list, dstr_ptr))
-                return 0;
+            }
             occ_start = occ_end + 1;
         }
     }
@@ -713,15 +713,24 @@ dstr *dstr_list_to_dstr(const char *sep, dstr_list *list)
     dstr *str = dstr_new();
     dstr_link *link;
 
+    if (!str)
+        return 0;
+
     if (sep){
-        for (link = list->head; link; link = link->next){
-            dstr_append(str, link->str);
+        DSTR_LIST_FOREACH(list, link){
+            if (!dstr_append(str, link->str)){
+                dstr_decref(str);
+                return 0;
+            }
             if (link->next)
                 dstr_append_cstr(str, sep);
         }
     } else {
-        for (link = list->head; link; link = link->next){
-            dstr_append(str, link->str);
+        DSTR_LIST_FOREACH(list, link){
+            if (!dstr_append(str, link->str)){
+                dstr_decref(str);
+                return 0;
+            }
         }
     }
 
@@ -735,7 +744,10 @@ dstr_list *dstr_list_search_contains(dstr_list *search, const char * substr)
 
     DSTR_LIST_FOREACH(search, link){
         if (dstr_contains(link->str, substr)){
-            dstr_list_add(found, link->str);
+            if (!dstr_list_add(found, link->str)){
+                dstr_list_decref(found);
+                return 0;
+            }
         }
     }
 
@@ -763,8 +775,10 @@ dstr_list *dstr_list_bdecode(const char *str)
             str++;
         }
         str++; // Consume 'l'
-        if (!dstr_list_add_decref(list, dstr_with_initialn(str, str_sz)))
+        if (!dstr_list_add_decref(list, dstr_with_initialn(str, str_sz))){
             dstr_list_decref(list);
+            return 0;
+        }
         str += str_sz;
         if (*str == 'e')
             break; // End of list.
@@ -779,10 +793,16 @@ dstr *dstr_list_bencode(const dstr_list *list)
     dstr_link *link;
 
     DSTR_LIST_FOREACH(list, link){
-        dstr_sprintf(byte_arr, "%d:", dstr_len(link->str));
-        dstr_append(byte_arr, link->str);
+        if (!dstr_sprintf(byte_arr, "%d:", dstr_len(link->str)) ||
+                !dstr_append(byte_arr, link->str)){
+            dstr_decref(byte_arr);
+            return 0;
+        }
     }
-    dstr_append_cstr(byte_arr, "e");
+    if (!dstr_append_cstr(byte_arr, "e")){
+        dstr_decref(byte_arr);
+        return 0;
+    }
     return byte_arr;
 }
 
