@@ -317,6 +317,8 @@ dstr_list *dstr_split_to_list(const dstr *str, const char *sep)
     occ_start = cstr;
 
     list = dstr_list_new();
+    if (!list)
+        return 0;
     cstr = dstr_to_cstr_const(str);
     for (;;){
         occ_end = strstr(occ_start, sep);
@@ -742,6 +744,9 @@ dstr_list *dstr_list_search_contains(dstr_list *search, const char * substr)
     dstr_list *found = dstr_list_new();
     dstr_link *link;
 
+    if (!found)
+        return 0;
+
     DSTR_LIST_FOREACH(search, link){
         if (dstr_contains(link->str, substr)){
             if (!dstr_list_add(found, link->str)){
@@ -767,6 +772,9 @@ dstr_list *dstr_list_bdecode(const char *str)
     if (str[0] != 'l') // Formatting might be sane.
         return 0;
     list = dstr_list_new();
+    if (!list)
+        return 0;
+
     str++;
     for (;;){
         str_sz = 0;
