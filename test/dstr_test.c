@@ -292,6 +292,16 @@ void test_dstr_split_to_vector()
     dstr_vector_decref(vec);
 }
 
+void test_dstr_resize()
+{
+    dstr *str = dstr_with_initial("some large string i want to resize");
+    dstr_resize_fill(str, 4, 0);
+    CU_ASSERT_STRING_EQUAL("some", dstr_to_cstr_const(str));
+    dstr_resize_fill(str, 10, 'l');
+    CU_ASSERT_STRING_EQUAL("somelllllll", dstr_to_cstr_const(str));
+    dstr_decref(str);
+}
+
 void test_dstr_split_to_list()
 {
     dstr *str = dstr_with_initial("word1,word2,word3,word4,word5,word6");
@@ -743,7 +753,7 @@ void test_diverse_things()
 void test_vector_append_speed()
 {
     dstr *str = dstr_with_initial("append me");
-    dstr_vector *vec = dstr_vector_prealloc(1000000);
+    dstr_vector *vec = dstr_vector_prealloc(10000);
     clock_t start = clock(), diff;
     int i;
 
@@ -922,6 +932,7 @@ int main()
            !CU_add_test(dstr_suite, "dstr_contains_dstr", test_dstr_contains_dstr) ||
            !CU_add_test(dstr_suite, "dstr_split_to_vector", test_dstr_split_to_vector) ||
            !CU_add_test(dstr_suite, "dstr_split_to_list", test_dstr_split_to_list) ||
+           !CU_add_test(dstr_suite, "dstr_resize", test_dstr_resize) ||
            !CU_add_test(dstr_suite, "dstr_dstr_to_cstr", test_dstr_to_cstr)){
       CU_cleanup_registry();
       return CU_get_error();
