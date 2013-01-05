@@ -612,7 +612,6 @@ int dstr_resize_fill(dstr *str, size_t n, char fill)
     } else {
         if (!__dstr_alloc(str, n_with_sz))
             return 0;
-        str->mem = n_with_sz;
         __dstr_safe_memset(str->data + (str->sz), fill, n);
         str->sz = n;
         str->data[str->sz + 1] = '\0';
