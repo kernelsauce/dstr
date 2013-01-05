@@ -102,7 +102,9 @@ void dstr_decref(dstr *str);
     (str->ref++)
 
 /* Return current string length (not including sentinel).   */
-size_t dstr_len(const dstr* str);
+size_t dstr_length(const dstr* str);
+/* Return size of allocated memory    */
+size_t dstr_capacity(const dstr *str);
 
 /* Appends a dynamic string to a dynamic string. See dstr_append_decref for
    a reference stealing implementation   */
@@ -143,6 +145,9 @@ void dstr_clear(dstr *str);
 /* Compacts the memory used by a string. Not needed unless you are going from a
    really big string to a very small one.   */
 int dstr_compact(dstr *str);
+/* Requests that the capacity of the allocated memory in the string to be
+   at least n.   */
+int dstr_reserve(dstr *str, size_t n);
 
 /* Search for needle in a haystack (C string). Returns n occurences.  */
 int dstr_contains(const dstr *haystack, const char *needle);
@@ -158,6 +163,8 @@ int dstr_ends_with(const dstr *str, const char *ends_with);
 int dstr_ends_with_dstr(const dstr *str, dstr *ends_with);
 /* Check if string is a exact match to sub C string.   */
 int dstr_matches(const dstr *haystack, const char *needle);
+/* Test if string is empty.    */
+int dstr_empty(const dstr *str);
 
 /* Split a dynamic string to a vector. If none occurences of seperator is
    found a zero sized vector is returned.   */
@@ -165,6 +172,15 @@ dstr_vector *dstr_split_to_vector(const dstr *str, const char *sep);
 /* Split a dynamic string to a list. If none were found a empty list
    is returned.   */
 dstr_list *dstr_split_to_list(const dstr *str, const char *sep);
+
+/* Resizes the string content to n characters. If n is greater than the current
+   length of the string, the content is expanded by appending as many instances
+   of the c character as needed to reach a size of n characters.  */
+int dstr_resize_fill(dstr *str, size_t n, char fill);
+/* Resizes the string content to n characters. If n is greater than the current
+   length of the string, the content is expanded by appending as many instances
+   of the nul character as needed to reach a size of n characters.  */
+int dstr_resize(dstr *str, size_t n);
 
 /* Print the string to stdout.   */
 int dstr_print(const dstr *src);

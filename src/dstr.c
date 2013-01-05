@@ -51,7 +51,6 @@ dstr *dstr_version()
 
 /*                            DYNAMIC STRING                                 */
 
-#ifdef DSTR_MEM_CLEAR
 /* Memset that will not be optimized away by compilers.   */
 static void __dstr_safe_memset(void *ptr, int c, size_t sz)
 {
@@ -61,6 +60,7 @@ static void __dstr_safe_memset(void *ptr, int c, size_t sz)
         *p++ = (unsigned char)c;
 }
 
+#ifdef DSTR_MEM_CLEAR
 /* Realloc that will zero byte the old allocated space.    */
 static void *__dstr_safe_realloc(void *ptr, size_t new_sz, size_t old_sz)
 {
@@ -248,6 +248,14 @@ int dstr_compact(dstr *str)
     return 0;
 }
 
+int dstr_reserve(dstr *str, size_t n)
+{
+    if (n <= str->sz + 1)
+        return 0;
+    else
+        return __dstr_alloc(str, n);
+}
+
 int dstr_contains(const dstr *haystack, const char *needle)
 {
     const char* ptr = haystack->data;
@@ -403,9 +411,19 @@ int dstr_matches(const dstr *haystack, const char *needle)
     return 0;
 }
 
-size_t dstr_len(const dstr *str)
+int dstr_empty(const dstr *str)
+{
+    return str->sz == 0;
+}
+
+size_t dstr_length(const dstr *str)
 {
     return str->sz;
+}
+
+size_t dstr_capacity(const dstr *str)
+{
+    return str->mem;
 }
 
 int dstr_append(dstr* dest, const dstr* src)
@@ -585,7 +603,27 @@ int dstr_print(const dstr *src)
     return printf("%s", src->data);
 }
 
+int dstr_resize_fill(dstr *str, size_t n, char fill)
+{
+    size_t n_with_sz = n + sizeof(char);
+    if (n < str->sz){
+        str->sz = n;
+        str->data[n] = '\0';
+    } else {
+        if (!__dstr_alloc(str, n_with_sz))
+            return 0;
+        str->mem = n_with_sz;
+        __dstr_safe_memset(str->data + (str->sz), fill, n);
+        str->sz = n;
+        str->data[str->sz + 1] = '\0';
+    }
+    return 1;
+}
 
+int dstr_resize(dstr *str, size_t n)
+{
+    return dstr_resize_fill(str, n, '\0');
+}
 
 /*                          DYNAMIC STRING LIST                             */
 
@@ -809,7 +847,7 @@ dstr *dstr_list_bencode(const dstr_list *list)
     dstr_link *link;
 
     DSTR_LIST_FOREACH(list, link){
-        if (!dstr_sprintf(byte_arr, "%d:", dstr_len(link->str)) ||
+        if (!dstr_sprintf(byte_arr, "%d:", dstr_length(link->str)) ||
                 !dstr_append(byte_arr, link->str)){
             dstr_decref(byte_arr);
             return 0;
