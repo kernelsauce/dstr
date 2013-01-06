@@ -93,6 +93,8 @@ const char *dstr_to_cstr_const(const dstr* str);
 /* Copy dynamic string to C string. You must free the returned pointer with free
    when no longer in use.   */
 char *dstr_copy_to_cstr(const dstr* str);
+/* Creates a copy of a dynamic string object, with one reference.   */
+dstr *dstr_copy(const dstr *copy);
 /* Returns char at given index.   */
 char dstr_at(const dstr* str, size_t i);
 
@@ -105,7 +107,7 @@ void dstr_decref(dstr *str);
 
 /* Return current string length (not including sentinel).   */
 size_t dstr_length(const dstr* str);
-/* Return size of allocated memory    */
+/* Return size of allocated memory.    */
 size_t dstr_capacity(const dstr *str);
 
 /* Appends a dynamic string to a dynamic string. See dstr_append_decref for
@@ -114,6 +116,10 @@ int dstr_append(dstr* dest, const dstr* src);
 /* Appends a dynamic string to a dynamic string. Also steals one reference
    attached to the source string.   */
 int dstr_append_decref(dstr* dest, dstr* src);
+/* Appends a C string to a dynamic string.   */
+int dstr_append_cstr(dstr* dest, const char *src);
+/* Appends a C string up until n characters to a dynamic string.   */
+int dstr_append_cstrn(dstr* dest, const char *src, size_t n);
 /* Prepends a dynamic string to a dynamic string.   */
 int dstr_prepend(dstr* dest, const dstr* src);
 /* Prepends a dynamic string to a dynamic string. This function also steals
@@ -123,10 +129,6 @@ int dstr_prepend_decref(dstr* dest, dstr *src);
 int dstr_prepend_cstr(dstr* dest, const char *src);
 /* Prepends a C string, up until n characters, to a dynamic string.    */
 int dstr_prepend_cstrn(dstr* dest, const char *src, size_t n);
-/* Appends a C string to a dynamic string.   */
-int dstr_append_cstr(dstr* dest, const char *src);
-/* Appends a C string up until n characters to a dynamic string.   */
-int dstr_append_cstrn(dstr* dest, const char *src, size_t n);
 /* Append string printf style.   */
 int dstr_sprintf(dstr *str, const char *fmt, ...);
 
@@ -136,9 +138,6 @@ void dstr_to_upper(dstr *str);
 void dstr_to_lower(dstr *str);
 /* Capitalize first letter.   */
 void dstr_capitalize(dstr *str);
-
-/* Creates a copy of a dynamic string object, with one reference.   */
-dstr *dstr_copy(const dstr *copy);
 
 /* Clears contents of a dynamic string. Fills the entire memory area occupied
    with zero bytes. Unused memory is not free'd, use dstr_compact for that
@@ -173,7 +172,7 @@ int dstr_ends_with(const dstr *str, const char *ends_with);
 int dstr_ends_with_dstr(const dstr *str, dstr *ends_with);
 /* Check if string is a exact match to sub C string.   */
 int dstr_matches(const dstr *haystack, const char *needle);
-/* Test if string is empty.    */
+/* Test if string is empty. Duplicates dstr_length functionality.   */
 int dstr_empty(const dstr *str);
 
 /* Split a dynamic string to a vector. If none occurences of seperator is
@@ -239,7 +238,7 @@ dstr_list *dstr_list_search_contains(dstr_list *search, const char * substr);
    sub dynamic string.   */
 dstr_list *dstr_list_search_contains_dstr(dstr_list *search, const dstr *substr);
 
-/* Decode a bencoded list as to dstr_list.    */
+/* Decode a bencoded list to dstr_list.    */
 dstr_list *dstr_list_bdecode(const char *str);
 
 /* Bencode a string list.    */

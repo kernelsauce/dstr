@@ -228,6 +228,15 @@ void test_dstr_reserve()
     dstr_decref(str);
 }
 
+void test_dstr_empty()
+{
+    dstr *str = dstr_new();
+    CU_ASSERT(dstr_empty(str));
+    dstr_append_cstr(str, "test");
+    CU_ASSERT(!dstr_empty(str));
+    dstr_decref(str);
+}
+
 void test_dstr_starts_with_dstr()
 {
     dstr *match = dstr_with_initial("something to match");
@@ -938,6 +947,7 @@ int main()
            !CU_add_test(dstr_suite, "dstr_append", test_dstr_append) ||
            !CU_add_test(dstr_suite, "dstr_append_decref", test_dstr_append_decref) ||
            !CU_add_test(dstr_suite, "dstr_append_cstr", test_dstr_append_cstr) ||
+           !CU_add_test(dstr_suite, "dstr_empty", test_dstr_empty) ||
            !CU_add_test(dstr_suite, "dstr_sprintf", test_dstr_sprintf) ||
            !CU_add_test(dstr_suite, "dstr_to_upper", test_dstr_to_upper) ||
            !CU_add_test(dstr_suite, "dstr_to_lower", test_dstr_to_lower) ||
