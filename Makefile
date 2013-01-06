@@ -22,9 +22,12 @@ static: $(LIBRARY_A)
 shared: $(LIBRARY_SO)
 install: $(LIBRARY_SO)
 	sudo install libdstr.so /usr/lib/libdstr.so.1
+
+#Test target depends on libcunit (libcunit1-dev on debian/ubuntu)
 test: $(LIBRARY_SO) install
-	gcc $(CFLAGS) -L. -ldstr -lcunit ./test/dstr_test.c -o dstr_test
-	./dstr_test
+	$(CC) $(CFLAGS) ./test/dstr_test.c -o dstr_test -L./ -ldstr -lcunit
+
+all: static shared
 
 clean:
 	rm -rf *.so
