@@ -51,38 +51,7 @@ dstr *dstr_version()
 
 /*                            DYNAMIC STRING                                 */
 
-/* Memset that will not be optimized away by compilers.   */
-static void __dstr_safe_memset(void *ptr, int c, size_t sz)
-{
-    volatile unsigned char *p = ptr;
-
-    for (; sz > 0; sz--)
-        *p++ = (unsigned char)c;
-}
-
-#ifdef DSTR_MEM_CLEAR
-/* Realloc that will zero byte the old allocated space.    */
-static void *__dstr_safe_realloc(void *ptr, size_t new_sz, size_t old_sz)
-{
-    void * tmp_ptr;
-
-    tmp_ptr = malloc(new_sz);
-    if (!tmp_ptr)
-        return 0;
-    if (ptr){
-        if (old_sz <= new_sz) // increase buffer case
-            memcpy(tmp_ptr, ptr, old_sz);
-        else if (new_sz < old_sz)
-            memcpy(tmp_ptr, ptr, new_sz); // decrease buffer case
-        __dstr_safe_memset(ptr, 0, old_sz);
-        free(ptr);
-    }
-    return tmp_ptr;
-}
-#endif
-
-/* Allocate memory for dstr. Uses realloc if not DSTR_MEM_CLEAR is defined,
-   else it uses __dstr_safe_realloc. It will allocate according to
+/* Allocate memory for dstr. It will allocate according to
    DSTR_MEM_EXPAND_RATE define.   */
 static int __dstr_alloc(dstr* str, size_t sz)
 {
@@ -90,11 +59,7 @@ static int __dstr_alloc(dstr* str, size_t sz)
     void *tmp_ptr;
 
     more_mem = (sz * sizeof(char)) * DSTR_MEM_EXPAND_RATE;
-#ifdef DSTR_MEM_CLEAR
-    tmp_ptr = __dstr_safe_realloc(str->data, more_mem, str->mem);
-#else
-    tmp_ptr = realloc(str->data, more_mem);
-#endif
+    tmp_ptr = dstr_realloc(str->data, more_mem,str->mem);
     if (tmp_ptr)
         str->data = tmp_ptr;
     else
@@ -103,19 +68,13 @@ static int __dstr_alloc(dstr* str, size_t sz)
     return 1;
 }
 
-/* Allocate memory for dstr. Uses realloc if not DSTR_MEM_CLEAR is defined,
-   else it uses __dstr_safe_realloc.   */
 static int __dstr_alloc_no_grow(dstr* str, size_t sz)
 {
     size_t more_mem;
     void *tmp_ptr;
 
     more_mem = sz * sizeof(char);
-#ifdef DSTR_MEM_CLEAR
-    tmp_ptr = __dstr_safe_realloc(str->data, more_mem, str->mem);
-#else
-    tmp_ptr = realloc(str->data, more_mem);
-#endif
+    tmp_ptr = dstr_realloc(str->data, more_mem, str->mem);
     if (tmp_ptr)
         str->data = tmp_ptr;
     else
@@ -139,7 +98,7 @@ static char *__dstr_strdup(const char* str)
     char *cpy;
     size_t len = strlen(str);
 
-    cpy = malloc(len + 1);
+    cpy = dstr_malloc(len + 1);
     if (!cpy)
         return 0;
     cpy[len] = '\0';
@@ -154,7 +113,7 @@ static char *__dstr_strndup(const char *str, size_t sz)
 
     if (sz < len)
         len = sz;
-    cpy = malloc(len + 1);
+    cpy = dstr_malloc(len + 1);
     if (!cpy)
         return 0;
     cpy[len] = '\0';
@@ -166,13 +125,11 @@ void dstr_decref(dstr *str)
     str->ref--;
     if (!str->ref){
 #ifdef DSTR_MEM_CLEAR
-        __dstr_safe_memset(str->data, 0, str->mem);
-        free(str->data);
-        __dstr_safe_memset(str, 0, sizeof(dstr));
-        free(str);
+        dstr_safe_free(str->data, str->mem);
+        dstr_free(str, sizeof (dstr));
 #else
-        free(str->data);
-        free(str);
+        dstr_free(str->data);
+        dstr_free(str);
 #endif
     }
 }
@@ -184,7 +141,7 @@ const char *dstr_to_cstr_const(const dstr* str)
 
 dstr *dstr_new()
 {
-    dstr *str = malloc(sizeof(dstr));
+    dstr *str = dstr_malloc(sizeof(dstr));
 
     if (!str)
         return 0;
@@ -197,7 +154,7 @@ dstr *dstr_new()
 
 dstr *dstr_with_initial(const char *initial)
 {
-    dstr *str = malloc(sizeof(dstr));
+    dstr *str = dstr_malloc(sizeof(dstr));
 
     if (!str)
         return 0;
@@ -212,7 +169,7 @@ dstr *dstr_with_initial(const char *initial)
 
 dstr *dstr_with_initialn(const char *initial, size_t n)
 {
-    dstr *str = malloc(sizeof(dstr));
+    dstr *str = dstr_malloc(sizeof(dstr));
 
     if (!str)
         return 0;
@@ -227,13 +184,13 @@ dstr *dstr_with_initialn(const char *initial, size_t n)
 
 dstr *dstr_with_prealloc(size_t sz)
 {
-    dstr *str = malloc(sizeof(dstr));
+    dstr *str = dstr_malloc(sizeof(dstr));
     size_t pre_alloc_mem = sizeof(char) * sz;
 
     if (!str)
         return 0;
     str->sz = 0;
-    str->data = malloc(pre_alloc_mem);
+    str->data = dstr_malloc(pre_alloc_mem);
     if (!str->data)
         return 0;
     str->mem = pre_alloc_mem;
@@ -259,11 +216,7 @@ int dstr_compact(dstr *str)
 
     if (str->mem > str->sz){
         alloc = (sizeof(char) * str->sz + sizeof(char)) ;
-#ifdef DSTR_MEM_CLEAR
-        tmp_ptr = __dstr_safe_realloc(str->data, alloc, str->mem);
-#else
-        tmp_ptr = realloc(str->data, alloc);
-#endif
+        tmp_ptr = dstr_realloc(str->data, alloc, str->mem);
         if (tmp_ptr)
             str->data = tmp_ptr;
         else
@@ -657,7 +610,7 @@ int dstr_resize(dstr *str, size_t n)
 
 dstr_list *dstr_list_new()
 {
-    dstr_list *list = malloc(sizeof(dstr_list));
+    dstr_list *list = dstr_malloc(sizeof(dstr_list));
     if (!list)
         return 0;
     list->head = 0;
@@ -722,7 +675,7 @@ void dstr_list_remove(dstr_list *list, dstr_link *link)
     }
 
     dstr_decref(link->str);
-    free(link);
+    dstr_free(link);
 }
 
 size_t dstr_list_size(const dstr_list *list)
@@ -778,9 +731,9 @@ void dstr_list_decref (dstr_list *list)
         for (link = list->head; link; link = next){
             next = link->next;
             dstr_decref(link->str);
-            free(link);
+            dstr_free(link);
         }
-        free(list);
+        dstr_free(list);
     }
 }
 
@@ -843,7 +796,7 @@ dstr_list *dstr_list_bdecode(const char *str)
     size_t str_sz;
     dstr_list *list;
 
-    if (str[0] != 'l') // Formatting might be sane.
+    if (str[0] != 'l') /* Formatting might be sane. */
         return 0;
     list = dstr_list_new();
     if (!list)
@@ -856,14 +809,14 @@ dstr_list *dstr_list_bdecode(const char *str)
             str_sz = str_sz * 10 + (*str - '0');
             str++;
         }
-        str++; // Consume 'l'
+        str++; /* Consume 'l' */
         if (!dstr_list_add_decref(list, dstr_with_initialn(str, str_sz))){
             dstr_list_decref(list);
             return 0;
         }
         str += str_sz;
         if (*str == 'e')
-            break; // End of list.
+            break; /* End of list. */
     }
     return list;
 
@@ -894,7 +847,7 @@ dstr *dstr_list_bencode(const dstr_list *list)
 
 dstr_vector *dstr_vector_new()
 {
-    dstr_vector *vec = malloc(sizeof(dstr_vector));
+    dstr_vector *vec = dstr_malloc(sizeof(dstr_vector));
     if (!vec)
         return 0;
     vec->ref = 1;
@@ -906,13 +859,13 @@ dstr_vector *dstr_vector_new()
 
 dstr_vector *dstr_vector_prealloc(size_t elements)
 {
-    dstr_vector *vec = malloc(sizeof(dstr_vector));
+    dstr_vector *vec = dstr_malloc(sizeof(dstr_vector));
     if (!vec)
         return 0;
     vec->ref = 1;
-    vec->arr = malloc(elements * sizeof(dstr*));
+    vec->arr = dstr_malloc(elements * sizeof(dstr*));
     if (!vec->arr){
-        free(vec);
+        dstr_free(vec);
         return 0;
     }
     vec->space = elements;
@@ -928,15 +881,15 @@ void dstr_vector_decref(dstr_vector *vec)
         for (i = 0; i < vec->sz; i++){
             dstr_decref(vec->arr[i]);
         }
-        free(vec->arr);
-        free(vec);
+        dstr_free(vec->arr);
+        dstr_free(vec);
     }
 }
 
 static int __dstr_vector_alloc(dstr_vector *vec, unsigned int elements)
 {
     size_t alloc = elements * sizeof(dstr *) * DSTR_VECTOR_MEM_EXPAND_RATE;
-    vec->arr = (dstr **)realloc(vec->arr, alloc);
+    vec->arr = (dstr **)dstr_realloc(vec->arr, alloc, vec->space);
     if (!vec->arr)
         return 0;
     vec->space = elements * DSTR_VECTOR_MEM_EXPAND_RATE;
@@ -1078,3 +1031,40 @@ int dstr_vector_remove(dstr_vector *vec, size_t pos)
     }
     return 0;
 }
+
+
+#ifdef DSTR_MEM_CLEAR
+
+/* Memset that will not be optimized away by compilers.   */
+void dstr_safe_memset(void *ptr, int c, size_t sz)
+{
+    volatile unsigned char *p = ptr;
+    for (; sz > 0; sz--)
+        *p++ = (unsigned char)c;
+}
+
+/* Realloc that will zero byte the old allocated space.    */
+void *dstr_safe_realloc(void *ptr, size_t new_sz, size_t old_sz)
+{
+    void * tmp_ptr;
+    tmp_ptr = dstr_malloc(new_sz);
+    if (!tmp_ptr)
+            return 0;
+    if (ptr){
+            if (old_sz <= new_sz) /* increase buffer case */
+                    memcpy(tmp_ptr, ptr, old_sz);
+            else if (new_sz < old_sz)
+                    memcpy(tmp_ptr, ptr, new_sz); /* decrease buffer case */
+            dstr_safe_memset(ptr, 0, old_sz);
+            dstr_free(ptr);
+    }
+    return tmp_ptr;
+}
+
+void dstr_safe_free(void *ptr, size_t sz)
+{
+    dstr_safe_memset(ptr, 0, sz);
+    dstr_free(str);
+}
+
+#endif /* DSTR_MEM_CLEAR */
