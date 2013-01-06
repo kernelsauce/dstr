@@ -24,8 +24,11 @@ install: $(LIBRARY_SO)
 	sudo install libdstr.so /usr/lib/libdstr.so.1
 
 #Test target depends on libcunit (libcunit1-dev on debian/ubuntu)
-test: $(LIBRARY_SO) install
+test: $(LIBRARY_SO)
 	$(CC) $(CFLAGS) ./test/dstr_test.c -o dstr_test -L./ -ldstr -lcunit
+
+run_tests: test
+	./dstr_test
 
 all: static shared
 
