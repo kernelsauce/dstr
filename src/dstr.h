@@ -71,7 +71,7 @@ dstr *dstr_version();
    allocations to avoid allocation thrasing. Default is 2.
    DSTR_MEM_CLEAR: zero all memory being released to hold char arrays. */
 #ifndef DSTR_MEM_EXPAND_RATE
-  #define DSTR_MEM_EXPAND_RATE 2 // How much to grow per allocation.
+  #define DSTR_MEM_EXPAND_RATE 3 // How much to grow per allocation.
 #endif
 
 /* Create a new dynamic string object.   */
@@ -93,6 +93,8 @@ const char *dstr_to_cstr_const(const dstr* str);
 /* Copy dynamic string to C string. You must free the returned pointer with free
    when no longer in use.   */
 char *dstr_copy_to_cstr(const dstr* str);
+/* Returns char at given index.   */
+char dstr_at(const dstr* str, size_t i);
 
 /* Decreases reference to the dynamic string.
    If no more references exists, the string is free'd.   */
@@ -148,6 +150,14 @@ int dstr_compact(dstr *str);
 /* Requests that the capacity of the allocated memory in the string to be
    at least n.   */
 int dstr_reserve(dstr *str, size_t n);
+/* Resizes the string content to n characters. If n is greater than the current
+   length of the string, the content is expanded by appending as many instances
+   of the c character as needed to reach a size of n characters.  */
+int dstr_resize_fill(dstr *str, size_t n, char fill);
+/* Resizes the string content to n characters. If n is greater than the current
+   length of the string, the content is expanded by appending as many instances
+   of the nul character as needed to reach a size of n characters.  */
+int dstr_resize(dstr *str, size_t n);
 
 /* Search for needle in a haystack (C string). Returns n occurences.  */
 int dstr_contains(const dstr *haystack, const char *needle);
@@ -172,15 +182,6 @@ dstr_vector *dstr_split_to_vector(const dstr *str, const char *sep);
 /* Split a dynamic string to a list. If none were found a empty list
    is returned.   */
 dstr_list *dstr_split_to_list(const dstr *str, const char *sep);
-
-/* Resizes the string content to n characters. If n is greater than the current
-   length of the string, the content is expanded by appending as many instances
-   of the c character as needed to reach a size of n characters.  */
-int dstr_resize_fill(dstr *str, size_t n, char fill);
-/* Resizes the string content to n characters. If n is greater than the current
-   length of the string, the content is expanded by appending as many instances
-   of the nul character as needed to reach a size of n characters.  */
-int dstr_resize(dstr *str, size_t n);
 
 /* Print the string to stdout.   */
 int dstr_print(const dstr *src);
@@ -259,8 +260,7 @@ void dstr_list_decref (dstr_list *list);
    DSTR_MEM_SECURITY: if defined boundaries for vectors are checked. If a
    invalid position is requested a null pointer will be returned.
    DSTR_VECTOR_MEM_EXPAND_RATE: defines how many times to multiply memory
-   allocations to give avoid allocation thrasing.   */
-#include <limits.h>
+   allocations to avoid allocation thrasing.   */
 #define DSTR_VECTOR_END SIZE_MAX // End of vector position magix.
 #define DSTR_VECTOR_BEGIN  0x0 // Start of vector position magix.
 #ifndef DSTR_VECTOR_MEM_EXPAND_RATE

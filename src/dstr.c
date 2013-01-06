@@ -82,13 +82,35 @@ static void *__dstr_safe_realloc(void *ptr, size_t new_sz, size_t old_sz)
 #endif
 
 /* Allocate memory for dstr. Uses realloc if not DSTR_MEM_CLEAR is defined,
-   else it uses __dstr_safe_realloc.   */
+   else it uses __dstr_safe_realloc. It will allocate according to
+   DSTR_MEM_EXPAND_RATE define.   */
 static int __dstr_alloc(dstr* str, size_t sz)
 {
     size_t more_mem;
     void *tmp_ptr;
 
-    more_mem = (str->mem + (sz * sizeof(char))) * DSTR_MEM_EXPAND_RATE;
+    more_mem = (sz * sizeof(char)) * DSTR_MEM_EXPAND_RATE;
+#ifdef DSTR_MEM_CLEAR
+    tmp_ptr = __dstr_safe_realloc(str->data, more_mem, str->mem);
+#else
+    tmp_ptr = realloc(str->data, more_mem);
+#endif
+    if (tmp_ptr)
+        str->data = tmp_ptr;
+    else
+        return 0;
+    str->mem = more_mem;
+    return 1;
+}
+
+/* Allocate memory for dstr. Uses realloc if not DSTR_MEM_CLEAR is defined,
+   else it uses __dstr_safe_realloc.   */
+static int __dstr_alloc_no_grow(dstr* str, size_t sz)
+{
+    size_t more_mem;
+    void *tmp_ptr;
+
+    more_mem = sz * sizeof(char);
 #ifdef DSTR_MEM_CLEAR
     tmp_ptr = __dstr_safe_realloc(str->data, more_mem, str->mem);
 #else
@@ -225,6 +247,11 @@ char *dstr_copy_to_cstr(const dstr* str)
     return __dstr_strndup(str->data, str->sz + 1);
 }
 
+char dstr_at(const dstr* str, size_t i)
+{
+    return str->data[i];
+}
+
 int dstr_compact(dstr *str)
 {
     int alloc;
@@ -252,8 +279,10 @@ int dstr_reserve(dstr *str, size_t n)
 {
     if (n <= str->sz + 1)
         return 0;
-    else
-        return __dstr_alloc(str, n);
+    else {
+
+        return __dstr_alloc_no_grow(str, n);
+    }
 }
 
 int dstr_contains(const dstr *haystack, const char *needle)

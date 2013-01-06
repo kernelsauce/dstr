@@ -105,6 +105,18 @@ void test_dstr_copy_to_cstr()
     free(cstr);
 }
 
+void test_dstr_at()
+{
+    dstr *str = dstr_with_initial("three");
+    CU_ASSERT_EQUAL(dstr_at(str, 0), 't');
+    CU_ASSERT_EQUAL(dstr_at(str, 1), 'h');
+    CU_ASSERT_EQUAL(dstr_at(str, 2), 'r');
+    CU_ASSERT_EQUAL(dstr_at(str, 3), 'e');
+    CU_ASSERT_EQUAL(dstr_at(str, 4), 'e');
+    CU_ASSERT_EQUAL(dstr_at(str, 5), '\0');
+    dstr_decref(str);
+}
+
 void test_dstr_append()
 {
     dstr *str = dstr_with_initial("concat me");
@@ -204,6 +216,15 @@ void test_dstr_compact()
     dstr_append_cstr(str, "hi!");
     dstr_compact(str);
     CU_ASSERT_EQUAL(str->mem, 4);
+    dstr_decref(str);
+}
+
+void test_dstr_reserve()
+{
+    dstr *str = dstr_with_initial("some data");
+    int mem = dstr_capacity(str);
+    dstr_reserve(str, mem + 20);
+    CU_ASSERT_EQUAL(dstr_capacity(str), mem + 20);
     dstr_decref(str);
 }
 
@@ -913,6 +934,7 @@ int main()
            !CU_add_test(dstr_suite, "dstr_decref", test_decref) ||
            !CU_add_test(dstr_suite, "dstr_incref", test_incref) ||
            !CU_add_test(dstr_suite, "dstr_dstr_copy_to_cstr", test_dstr_copy_to_cstr) ||
+           !CU_add_test(dstr_suite, "dstr_dstr_at", test_dstr_at) ||
            !CU_add_test(dstr_suite, "dstr_append", test_dstr_append) ||
            !CU_add_test(dstr_suite, "dstr_append_decref", test_dstr_append_decref) ||
            !CU_add_test(dstr_suite, "dstr_append_cstr", test_dstr_append_cstr) ||
@@ -924,6 +946,7 @@ int main()
            !CU_add_test(dstr_suite, "dstr_prepend_cstr", test_dstr_prepend_cstr) ||
            !CU_add_test(dstr_suite, "dstr_clear", test_dstr_clear) ||
            !CU_add_test(dstr_suite, "dstr_compact", test_dstr_compact) ||
+           !CU_add_test(dstr_suite, "dstr_reserve", test_dstr_reserve) ||
            !CU_add_test(dstr_suite, "dstr_starts_with_dstr", test_dstr_starts_with_dstr) ||
            !CU_add_test(dstr_suite, "dstr_starts_with", test_dstr_starts_with) ||
            !CU_add_test(dstr_suite, "dstr_ends_with", test_dstr_ends_with) ||
