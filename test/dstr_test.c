@@ -22,6 +22,7 @@
 
 #include <string.h>
 #include <time.h>
+#include <stdio.h>
 #include <CUnit/CUnit.h>
 #include "CUnit/Basic.h"
 #include "dstr.h"
