@@ -37,10 +37,10 @@
    protection).    */
 
 typedef struct dstr{
-    char* data; // Internal pointer.
-    size_t sz; // Current size of string.
-    size_t mem; // Current memory allocated.
-    unsigned int ref; // Reference count.
+    char* data; /* Internal pointer. */
+    size_t sz; /* Current size of string. */
+    size_t mem; /* Current memory allocated. */
+    unsigned int ref; /* Reference count. */
 } dstr;
 
 typedef struct dstr_link{
@@ -62,6 +62,7 @@ typedef struct dstr_vector{
     unsigned int ref;
 } dstr_vector;
 
+
 /* Get library version as string. E.g 1.0, 1.0.1.   */
 dstr *dstr_version();
 
@@ -71,7 +72,7 @@ dstr *dstr_version();
    allocations to avoid allocation thrasing. Default is 2.
    DSTR_MEM_CLEAR: zero all memory being released to hold char arrays. */
 #ifndef DSTR_MEM_EXPAND_RATE
-  #define DSTR_MEM_EXPAND_RATE 3 // How much to grow per allocation.
+  #define DSTR_MEM_EXPAND_RATE 3 /* How much to grow per allocation. */
 #endif
 
 /* Create a new dynamic string object.   */
@@ -260,10 +261,10 @@ void dstr_list_decref (dstr_list *list);
    invalid position is requested a null pointer will be returned.
    DSTR_VECTOR_MEM_EXPAND_RATE: defines how many times to multiply memory
    allocations to avoid allocation thrasing.   */
-#define DSTR_VECTOR_END SIZE_MAX // End of vector position magix.
-#define DSTR_VECTOR_BEGIN  0x0 // Start of vector position magix.
+#define DSTR_VECTOR_END SIZE_MAX /* End of vector position magix. */
+#define DSTR_VECTOR_BEGIN  0x0 /* Start of vector position magix. */
 #ifndef DSTR_VECTOR_MEM_EXPAND_RATE
-    #define DSTR_VECTOR_MEM_EXPAND_RATE 3 // How much to grow per allocation.
+    #define DSTR_VECTOR_MEM_EXPAND_RATE 3 /* How much to grow per allocation. */
 #endif
 
 /* Create a new vector with no initial size. To avoid thrashing of reallocations
@@ -316,4 +317,30 @@ void dstr_vector_decref(dstr_vector *vec);
 #define dstr_vector_incref(vec) \
     (vec->ref++)
 
+/**/
+
+void dstr_safe_memset(void *ptr, int c, size_t sz);
+void *dstr_safe_realloc(void *ptr, size_t new_sz, size_t old_sz);
+void dstr_safe_free(void *ptr, size_t sz);
+
+#ifndef dstr_malloc
+  #define dstr_malloc  malloc
+#endif /* dstr_malloc */
+
+#ifndef dstr_realloc
+  #ifdef DSTR_MEM_CLEAR
+    #define dstr_realloc(ptr,ns,os) __dstr_safe_realloc(ptr,ns,os)
+  #else
+    #define dstr_realloc(ptr,ns,os) realloc(ptr,ns)
+  #endif /* DSTR_MEM_CLEAR */
+#endif /* dstr_realloc */
+
+#ifndef dstr_free
+    #define dstr_free free
+#endif /* dstr_free */
+
+
 #endif /* dstr.h */
+
+
+
