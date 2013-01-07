@@ -26,9 +26,6 @@
 #define DSTR_MAJOR_VERSION 1
 #define DSTR_MINOR_VERSION 0
 #define DSTR_VERSION "1.0"
-#ifndef SIZE_MAX
-    #define SIZE_MAX (sizeof(size_t) -1)
-#endif
 
 /* Note: All functions that returns a integer will return 0 for failure
    and 1 for success unless otherwise is specified. Booleans are not used as to
@@ -271,7 +268,6 @@ void dstr_list_decref (dstr_list *list);
    invalid position is requested a null pointer will be returned.
    DSTR_VECTOR_MEM_EXPAND_RATE: defines how many times to multiply memory
    allocations to avoid allocation thrasing.   */
-#define DSTR_VECTOR_END SIZE_MAX /* End of vector position magix. */
 #define DSTR_VECTOR_BEGIN  0x0 /* Start of vector position magix. */
 #ifndef DSTR_VECTOR_MEM_EXPAND_RATE
     #define DSTR_VECTOR_MEM_EXPAND_RATE 3 /* How much to grow per allocation. */
@@ -321,20 +317,22 @@ int dstr_vector_is_empty(const dstr_vector *vec);
 size_t dstr_vector_size(const dstr_vector *vec);
 
 /* Decrement reference count by one. When no more references exists the
- * vector is emptied (and strings decrefed) and free'd.   */
+   vector is emptied (and strings decrefed) and free'd.   */
 void dstr_vector_decref(dstr_vector *vec);
 /* Increment referece count by one.   */
 #define dstr_vector_incref(vec) \
     (vec->ref++)
 
-/**/
-
+#ifdef DSTR_MEM_CLEAR
 void dstr_safe_memset(void *ptr, int c, size_t sz);
 void *dstr_safe_realloc(void *ptr, size_t new_sz, size_t old_sz);
 void dstr_safe_free(void *ptr, size_t sz);
+#endif
 
+/* Define allocation function of your liking by defining dstr_malloc and
+   dstr_free.   */
 #ifndef dstr_malloc
-  #define dstr_malloc  malloc
+  #define dstr_malloc malloc
 #endif /* dstr_malloc */
 
 #ifndef dstr_realloc

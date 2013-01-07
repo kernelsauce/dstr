@@ -49,6 +49,42 @@ dstr *dstr_version()
     return ver;
 }
 
+#ifdef DSTR_MEM_CLEAR
+
+/* Memset that will not be optimized away by compilers.   */
+void dstr_safe_memset(void *ptr, int c, size_t sz)
+{
+    volatile unsigned char *p = ptr;
+    for (; sz > 0; sz--)
+        *p++ = (unsigned char)c;
+}
+
+/* Realloc that will zero byte the old allocated space.    */
+void *dstr_safe_realloc(void *ptr, size_t new_sz, size_t old_sz)
+{
+    void * tmp_ptr;
+    tmp_ptr = dstr_malloc(new_sz);
+    if (!tmp_ptr)
+            return 0;
+    if (ptr){
+            if (old_sz <= new_sz) /* increase buffer case */
+                    memcpy(tmp_ptr, ptr, old_sz);
+            else if (new_sz < old_sz)
+                    memcpy(tmp_ptr, ptr, new_sz); /* decrease buffer case */
+            dstr_safe_memset(ptr, 0, old_sz);
+            dstr_free(ptr);
+    }
+    return tmp_ptr;
+}
+
+void dstr_safe_free(void *ptr, size_t sz)
+{
+    dstr_safe_memset(ptr, 0, sz);
+    dstr_free(ptr);
+}
+
+#endif /* DSTR_MEM_CLEAR */
+
 /*                            DYNAMIC STRING                                 */
 
 /* Allocate memory for dstr. It will allocate according to
@@ -946,7 +982,7 @@ int dstr_vector_insert(dstr_vector *vec, size_t pos, dstr *str)
     size_t new_sz = vec->sz + 1;
 
 #ifdef DSTR_MEM_SECURITY
-    if (pos != DSTR_VECTOR_END && vec->sz - 1 < pos)
+    if (vec->sz < pos)
         return 0;
 #endif
 
@@ -954,29 +990,34 @@ int dstr_vector_insert(dstr_vector *vec, size_t pos, dstr *str)
         if (!__dstr_vector_alloc(vec, new_sz))
             return 0;
     }
-    if (pos == DSTR_VECTOR_END){
-        vec->arr[vec->sz] = str;
-        vec->sz++;
-        dstr_incref(str);
-        return 1;
-    } else {
-        memmove(vec->arr + pos + 1,
-                vec->arr + pos,
-                sizeof(dstr*) * (vec->sz - pos));
-        vec->arr[pos] = str;
-        vec->sz++;
-        dstr_incref(str);
-        return 1;
-    }
-    return 0;
+    memmove(vec->arr + pos + 1,
+            vec->arr + pos,
+            sizeof(dstr*) * (vec->sz - pos));
+    vec->arr[pos] = str;
+    vec->sz++;
+    dstr_incref(str);
+    return 1;
 }
 
 int dstr_vector_insert_decref(dstr_vector *vec, size_t pos, dstr *str)
 {
-    int rc = dstr_vector_insert(vec, pos, str);
-    if (rc)
-        dstr_decref(str);
-    return rc;
+    size_t new_sz = vec->sz + 1;
+
+#ifdef DSTR_MEM_SECURITY
+    if (vec->sz < pos)
+        return 0;
+#endif
+
+    if (!__dstr_vector_can_hold(vec, new_sz)){
+        if (!__dstr_vector_alloc(vec, new_sz))
+            return 0;
+    }
+    memmove(vec->arr + pos + 1,
+            vec->arr + pos,
+            sizeof(dstr*) * (vec->sz - pos));
+    vec->arr[pos] = str;
+    vec->sz++;
+    return 1;
 }
 
 int dstr_vector_push_front(dstr_vector *vec, dstr *str)
@@ -991,17 +1032,42 @@ int dstr_vector_push_front_decref(dstr_vector *vec, dstr *str)
 
 int dstr_vector_push_back(dstr_vector *vec, dstr *str)
 {
-    return dstr_vector_insert(vec, DSTR_VECTOR_END, str);
+    size_t new_sz = vec->sz + 1;
+
+    if (!__dstr_vector_can_hold(vec, new_sz)){
+        if (!__dstr_vector_alloc(vec, new_sz))
+            return 0;
+    }
+    vec->arr[vec->sz] = str;
+    vec->sz++;
+    dstr_incref(str);
+    return 1;
 }
 
 int dstr_vector_push_back_decref(dstr_vector *vec, dstr *str)
 {
-    return dstr_vector_insert_decref(vec, DSTR_VECTOR_END, str);
+    size_t new_sz = vec->sz + 1;
+
+    if (!__dstr_vector_can_hold(vec, new_sz)){
+        if (!__dstr_vector_alloc(vec, new_sz))
+            return 0;
+    }
+    vec->arr[vec->sz] = str;
+    vec->sz++;
+    return 1;
 }
 
 void dstr_vector_pop_back(dstr_vector *vec)
 {
-    dstr_vector_remove(vec, DSTR_VECTOR_END);
+    size_t sz = vec->sz - 1;
+#ifdef DSTR_MEM_SECURITY
+    if (!vec->sz)
+        return;
+#endif
+
+    dstr_decref(vec->arr[sz]);
+    vec->arr[sz] = 0;
+    vec->sz--;
 }
 
 void dstr_vector_pop_front(dstr_vector *vec)
@@ -1030,7 +1096,7 @@ dstr *dstr_vector_front(dstr_vector *vec)
 dstr *dstr_vector_at(dstr_vector *vec, size_t pos)
 {
 #ifdef DSTR_MEM_SECURITY
-    if (!vec->sz || (pos != DSTR_VECTOR_END && vec->sz - 1 < pos))
+    if (!vec->sz || vec->sz < pos)
         return 0;
 #endif
     return vec->arr[pos];
@@ -1048,61 +1114,15 @@ size_t dstr_vector_size(const dstr_vector *vec)
 
 int dstr_vector_remove(dstr_vector *vec, size_t pos)
 {
-    size_t sz = vec->sz - 1;
 #ifdef DSTR_MEM_SECURITY
-    if (!vec->sz || (pos != DSTR_VECTOR_END && vec->sz - 1 < pos))
+    if (!vec->sz || vec->sz - 1 < pos)
         return 0;
 #endif
 
-    if (pos == DSTR_VECTOR_END){
-        dstr_decref(vec->arr[sz]);
-        vec->arr[sz] = 0;
-        vec->sz--;
-        return 1;
-    } else {
-        dstr_decref(vec->arr[pos]);
-        memmove(vec->arr + pos,
-                vec->arr + pos + 1,
-                sizeof(dstr*) * (vec->sz - pos - 1));
-        vec->sz--;
-        return 1;
-    }
-    return 0;
+    dstr_decref(vec->arr[pos]);
+    memmove(vec->arr + pos,
+            vec->arr + pos + 1,
+            sizeof(dstr*) * (vec->sz - pos - 1));
+    vec->sz--;
+    return 1;
 }
-
-
-#ifdef DSTR_MEM_CLEAR
-
-/* Memset that will not be optimized away by compilers.   */
-void dstr_safe_memset(void *ptr, int c, size_t sz)
-{
-    volatile unsigned char *p = ptr;
-    for (; sz > 0; sz--)
-        *p++ = (unsigned char)c;
-}
-
-/* Realloc that will zero byte the old allocated space.    */
-void *dstr_safe_realloc(void *ptr, size_t new_sz, size_t old_sz)
-{
-    void * tmp_ptr;
-    tmp_ptr = dstr_malloc(new_sz);
-    if (!tmp_ptr)
-            return 0;
-    if (ptr){
-            if (old_sz <= new_sz) /* increase buffer case */
-                    memcpy(tmp_ptr, ptr, old_sz);
-            else if (new_sz < old_sz)
-                    memcpy(tmp_ptr, ptr, new_sz); /* decrease buffer case */
-            dstr_safe_memset(ptr, 0, old_sz);
-            dstr_free(ptr);
-    }
-    return tmp_ptr;
-}
-
-void dstr_safe_free(void *ptr, size_t sz)
-{
-    dstr_safe_memset(ptr, 0, sz);
-    dstr_free(ptr);
-}
-
-#endif /* DSTR_MEM_CLEAR */
