@@ -130,6 +130,8 @@ int dstr_prepend_decref(dstr* dest, dstr *src);
 int dstr_prepend_cstr(dstr* dest, const char *src);
 /* Prepends a C string, up until n characters, to a dynamic string.    */
 int dstr_prepend_cstrn(dstr* dest, const char *src, size_t n);
+/* Swap contents of string with another string.   */
+int dstr_swap(dstr *dest, const dstr *src);
 /* Append string printf style.   */
 int dstr_sprintf(dstr *str, const char *fmt, ...);
 

@@ -149,6 +149,15 @@ void test_dstr_append_cstr()
     dstr_decref(str);
 }
 
+void test_dstr_swap()
+{
+    dstr *str = dstr_with_initial("replace me");
+    dstr *with_me = dstr_with_initial("with me");
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(str), "replace me");
+    dstr_swap(str, with_me);
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(str), "with me");
+}
+
 void test_dstr_sprintf()
 {
     dstr *str = dstr_with_initial("I am this old: ");
@@ -948,6 +957,7 @@ int main()
            !CU_add_test(dstr_suite, "dstr_append", test_dstr_append) ||
            !CU_add_test(dstr_suite, "dstr_append_decref", test_dstr_append_decref) ||
            !CU_add_test(dstr_suite, "dstr_append_cstr", test_dstr_append_cstr) ||
+           !CU_add_test(dstr_suite, "dstr_swap", test_dstr_swap) ||
            !CU_add_test(dstr_suite, "dstr_empty", test_dstr_empty) ||
            !CU_add_test(dstr_suite, "dstr_sprintf", test_dstr_sprintf) ||
            !CU_add_test(dstr_suite, "dstr_to_upper", test_dstr_to_upper) ||

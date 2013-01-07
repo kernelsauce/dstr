@@ -558,6 +558,12 @@ int dstr_prepend_cstrn(dstr* dest, const char *src, size_t n)
     return 1;
 }
 
+int dstr_swap(dstr *dest, const dstr *src)
+{
+    dest->sz = 0;
+    return dstr_append(dest, src);
+}
+
 dstr *dstr_copy(const dstr *copy)
 {
     int rc;
