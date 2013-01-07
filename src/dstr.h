@@ -136,8 +136,9 @@ int dstr_swap(dstr *dest, const dstr *src);
 int dstr_erase(dstr *str, size_t first, size_t last);
 /* Insert dynamic string into given position.   */
 int dstr_insert(dstr *dest, const dstr *src, size_t pos);
-/* Insert string into given position.   */
+/* Insert C string into given position.   */
 int dstr_insert_cstr(dstr *dest, const char *src, size_t pos);
+/* Insert C string into given position up to n characters.   */
 int dstr_insert_cstrn(dstr *dest, const char *src, size_t pos, size_t n);
 /* Append string printf style.   */
 int dstr_sprintf(dstr *str, const char *fmt, ...);
