@@ -565,11 +565,11 @@ void test_dstr_vector_insert()
 {
     dstr_vector *vec = dstr_vector_new();
     CU_ASSERT_PTR_NOT_NULL(vec);
-    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol1")));
-    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol2")));
-    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol3")));
-    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol4")));
-    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol5")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, dstr_vector_size(vec), dstr_with_initial("lol1")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, dstr_vector_size(vec), dstr_with_initial("lol2")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, dstr_vector_size(vec), dstr_with_initial("lol3")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, dstr_vector_size(vec), dstr_with_initial("lol4")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, dstr_vector_size(vec), dstr_with_initial("lol5")));
     CU_ASSERT(dstr_vector_insert_decref(vec, 3, dstr_with_initial("liksom")));
     CU_ASSERT(dstr_vector_insert_decref(vec, 3, dstr_with_initial("hei")));
     CU_ASSERT(dstr_vector_insert_decref(vec, 3, dstr_with_initial("hei")));
@@ -590,11 +590,11 @@ void test_dstr_vector_remove()
 {
     dstr_vector *vec = dstr_vector_new();
     CU_ASSERT_PTR_NOT_NULL(vec);
-    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol1")));
-    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol2")));
-    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol3")));
-    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol4")));
-    CU_ASSERT(dstr_vector_insert_decref(vec, DSTR_VECTOR_END, dstr_with_initial("lol5")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, dstr_vector_size(vec), dstr_with_initial("lol1")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, dstr_vector_size(vec), dstr_with_initial("lol2")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, dstr_vector_size(vec), dstr_with_initial("lol3")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, dstr_vector_size(vec), dstr_with_initial("lol4")));
+    CU_ASSERT(dstr_vector_insert_decref(vec, dstr_vector_size(vec), dstr_with_initial("lol5")));
     CU_ASSERT(dstr_vector_insert_decref(vec, 3, dstr_with_initial("liksom")));
     CU_ASSERT(dstr_vector_insert_decref(vec, 3, dstr_with_initial("hei")));
     CU_ASSERT(dstr_vector_insert_decref(vec, 3, dstr_with_initial("hei")));
