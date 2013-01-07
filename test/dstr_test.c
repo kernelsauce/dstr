@@ -156,6 +156,25 @@ void test_dstr_swap()
     CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(str), "replace me");
     dstr_swap(str, with_me);
     CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(str), "with me");
+    dstr_decref(str);
+    dstr_decref(with_me);
+}
+
+void test_dstr_erase()
+{
+    dstr *str = dstr_with_initial("delete me");
+    dstr_erase(str, 0, 6);
+    CU_ASSERT_STRING_EQUAL(dstr_to_cstr_const(str), " me");
+    CU_ASSERT_EQUAL(dstr_length(str), 3);
+    dstr_decref(str);
+}
+
+void test_dstr_insert()
+{
+    dstr *str = dstr_with_initial("insert || <- here");
+    dstr_insert_cstr(str, "something", 8);
+    CU_ASSERT_STRING_EQUAL("insert |something| <- here", dstr_to_cstr_const(str));
+    dstr_decref(str);
 }
 
 void test_dstr_sprintf()
@@ -958,6 +977,8 @@ int main()
            !CU_add_test(dstr_suite, "dstr_append_decref", test_dstr_append_decref) ||
            !CU_add_test(dstr_suite, "dstr_append_cstr", test_dstr_append_cstr) ||
            !CU_add_test(dstr_suite, "dstr_swap", test_dstr_swap) ||
+           !CU_add_test(dstr_suite, "dstr_erase", test_dstr_erase) ||
+           !CU_add_test(dstr_suite, "dstr_insert", test_dstr_insert) ||
            !CU_add_test(dstr_suite, "dstr_empty", test_dstr_empty) ||
            !CU_add_test(dstr_suite, "dstr_sprintf", test_dstr_sprintf) ||
            !CU_add_test(dstr_suite, "dstr_to_upper", test_dstr_to_upper) ||

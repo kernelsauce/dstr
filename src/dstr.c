@@ -564,6 +564,38 @@ int dstr_swap(dstr *dest, const dstr *src)
     return dstr_append(dest, src);
 }
 
+int dstr_erase(dstr *str, size_t first, size_t last)
+{
+    if (str->sz < first || last == first)
+        return 0;
+    memmove(str->data + first, str->data + last, str->sz - last + 1);
+    str->sz -= last - first;
+    return 0;
+}
+
+int dstr_insert(dstr *dest, const dstr *src, size_t pos)
+{
+    return dstr_insert_cstr(dest, dstr_to_cstr_const(src), pos);
+}
+
+int dstr_insert_cstr(dstr *dest, const char *src, size_t pos)
+{
+    return dstr_insert_cstrn(dest, src, pos, strlen(src));
+}
+
+int dstr_insert_cstrn(dstr *dest, const char *src, size_t pos, size_t n)
+{
+    size_t storage = dest->sz + n + 1;
+    if (!n || dest->sz < pos)
+        return 0;
+    if (!__dstr_can_hold(dest, storage))
+        if (!__dstr_alloc(dest, storage))
+            return 0;
+    memmove(dest->data + pos + n, dest->data + pos, n + 1);
+    memcpy(dest->data + pos, src, n);
+    return 1;
+}
+
 dstr *dstr_copy(const dstr *copy)
 {
     int rc;
