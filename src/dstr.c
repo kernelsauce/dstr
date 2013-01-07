@@ -59,7 +59,7 @@ static int __dstr_alloc(dstr* str, size_t sz)
     void *tmp_ptr;
 
     more_mem = (sz * sizeof(char)) * DSTR_MEM_EXPAND_RATE;
-    tmp_ptr = dstr_realloc(str->data, more_mem,str->mem);
+    tmp_ptr = dstr_realloc(str->data, more_mem, str->mem);
     if (tmp_ptr)
         str->data = tmp_ptr;
     else
@@ -126,7 +126,7 @@ void dstr_decref(dstr *str)
     if (!str->ref){
 #ifdef DSTR_MEM_CLEAR
         dstr_safe_free(str->data, str->mem);
-        dstr_free(str, sizeof (dstr));
+        dstr_safe_free(str, sizeof (dstr));
 #else
         dstr_free(str->data);
         dstr_free(str);
@@ -927,7 +927,7 @@ void dstr_vector_decref(dstr_vector *vec)
 static int __dstr_vector_alloc(dstr_vector *vec, unsigned int elements)
 {
     size_t alloc = elements * sizeof(dstr *) * DSTR_VECTOR_MEM_EXPAND_RATE;
-    vec->arr = (dstr **)dstr_realloc(vec->arr, alloc, vec->space);
+    vec->arr = (dstr **)dstr_realloc(vec->arr, alloc, vec->space * sizeof(dstr*));
     if (!vec->arr)
         return 0;
     vec->space = elements * DSTR_VECTOR_MEM_EXPAND_RATE;
@@ -1102,7 +1102,7 @@ void *dstr_safe_realloc(void *ptr, size_t new_sz, size_t old_sz)
 void dstr_safe_free(void *ptr, size_t sz)
 {
     dstr_safe_memset(ptr, 0, sz);
-    dstr_free(str);
+    dstr_free(ptr);
 }
 
 #endif /* DSTR_MEM_CLEAR */

@@ -52,7 +52,7 @@ typedef struct dstr_link{
 typedef struct dstr_list{
     dstr_link *head;
     dstr_link *tail;
-    int ref;
+    unsigned int ref;
 } dstr_list;
 
 typedef struct dstr_vector{
@@ -339,7 +339,7 @@ void dstr_safe_free(void *ptr, size_t sz);
 
 #ifndef dstr_realloc
   #ifdef DSTR_MEM_CLEAR
-    #define dstr_realloc(ptr,ns,os) __dstr_safe_realloc(ptr,ns,os)
+    #define dstr_realloc(ptr,ns,os) dstr_safe_realloc(ptr,ns,os)
   #else
     #define dstr_realloc(ptr,ns,os) realloc(ptr,ns)
   #endif /* DSTR_MEM_CLEAR */
