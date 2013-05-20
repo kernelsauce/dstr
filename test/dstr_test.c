@@ -462,7 +462,7 @@ void test_dstr_list_foreach()
         CU_ASSERT_PTR_NOT_NULL(link);
         count++;
     }
-
+    CU_ASSERT_EQUAL(count, 3);
     dstr_list_decref(list);
 }
 
